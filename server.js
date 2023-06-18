@@ -2,12 +2,13 @@ const axios = require('axios');
 const express = require('express');
 const cors = require('cors');
 const app = express();
+const port = 3000;
 
 app.use(cors({
   origin: '*',
 }));
 
-app.get('/product/:id', async (req, res) => {
+app.get('/api/v1/search/shop.json', (req, res) => {
   const { id } = req.params;
   try {
     const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`);
@@ -20,7 +21,7 @@ app.get('/product/:id', async (req, res) => {
   }
 });
 
-app.listen(3000, () => console.log('Server is running on port 3000'));
+app.listen(port, () => {
 
 function extractPopularDegree(html) {
     const cheerio = require('cheerio');
@@ -38,4 +39,5 @@ function extractPopularDegree(html) {
       console.error('Invalid JSON data:', jsonData);
       return null;
     }  
-}
+  }
+};
