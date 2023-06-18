@@ -1,15 +1,13 @@
 const axios = require('axios');
 const express = require('express');
 const cors = require('cors');
-const cheerio = require('cheerio');
 const app = express();
-const port = 3000;
 
 app.use(cors({
   origin: '*',
 }));
 
-app.get('/api/v1/search/shop.json', async (req, res) => { // <-- Here add async
+app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`);
@@ -22,22 +20,22 @@ app.get('/api/v1/search/shop.json', async (req, res) => { // <-- Here add async
   }
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
-});
+app.listen(3000, () => console.log('Server is running on port 3000'));
 
 function extractPopularDegree(html) {
-  const $ = cheerio.load(html);
+    const cheerio = require('cheerio');
+    const $ = cheerio.load(html);
+  
+    // 해당 상품 페이지에서 __NEXT_DATA__ 스크립트 태그를 찾아 JSON 파싱
+    const scriptTag = $('#__NEXT_DATA__');
+    const jsonData = JSON.parse(scriptTag.html());
+  
+    // popularDegree 값 반환
+    if (jsonData && jsonData.props && jsonData.props.pageProps && jsonData.props.pageProps.product) {
 
-  // 해당 상품 페이지에서 __NEXT_DATA__ 스크립트 태그를 찾아 JSON 파싱
-  const scriptTag = $('#__NEXT_DATA__');
-  const jsonData = JSON.parse(scriptTag.html());
-
-  // popularDegree 값 반환
-  if (jsonData && jsonData.props && jsonData.props.pageProps && jsonData.props.pageProps.product) {
     return jsonData.props.pageProps.product.popularDegree;
-  } else {
-    console.error('Invalid JSON data:', jsonData);
-    return null;
-  }  
+    } else {
+      console.error('Invalid JSON data:', jsonData);
+      return null;
+    }  
 }
