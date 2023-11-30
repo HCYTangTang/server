@@ -32,6 +32,7 @@ function extractData(html) {
   } else {
     console.error('Invalid JSON data:', jsonData);
   }
-
   return { mallPid };
 }
+
+app.listen(3000, () => console.log('Server Open'));
