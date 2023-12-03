@@ -11,11 +11,11 @@ app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`);
-    const { mallPid } = extractMallPid(data);
-    res.json({ mallPid });
+    const { SV1, SV2, SV3, SV4 } = extractData(data);
+    res.json({ SV1, SV2, SV3, SV4 });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'An error occurred' });
+    res.status(500).json({ error: '에러 발생원인' });
   }
 });
 
@@ -28,22 +28,30 @@ app.get('/product2/:productid', async (req, res) => {
     res.json({ nvMid });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'An error occurred' });
+    res.status(500).json({ error: '에러 발생원인' });
   }
 });
 
-function extractMallPid(html) {
+function extractData(html) {
   const $ = cheerio.load(html);
   const scriptTag = $('#__NEXT_DATA__');
   const jsonData = JSON.parse(scriptTag.html());
 
-  let mallPid = null;
+  let SV1 = null;
+  let SV2 = null;
+  let SV3 = null;
+  let SV4 = null;
+  
   if (jsonData && jsonData.props && jsonData.props.pageProps && jsonData.props.pageProps.product) {
-    mallPid = jsonData.props.pageProps.product.mallPid;
+    const productData = jsonData.props.pageProps.product;
+    SV1 = productData.mallPid;
+    SV2 = productData.nvMid;
+    SV3 = productData.itemType;
+    SV4 = productData.productUrl;
   } else {
-    console.error('Invalid JSON data:', jsonData);
+    console.error('유효하지 않은 JSON 정보:', jsonData);
   }
-  return { mallPid };
+  return { SV1, SV2, SV3, SV4 };
 }
 
 function extractMid(html) {
@@ -59,4 +67,4 @@ function extractMid(html) {
 }
 
 const port = 3000;
-app.listen(port, () => console.log(`Server open on port ${port}`));
+app.listen(port, () => console.log(`서버 PORT: ${port}`));
