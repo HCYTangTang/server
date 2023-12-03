@@ -11,8 +11,8 @@ app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`);
-    const { SV1, SV2, SV3, SV4, SV5 } = extractData(data);
-    res.json({ SV1, SV2, SV3, SV4, SV5 });
+    const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(data);
+    res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: '에러 발생원인' });
@@ -42,18 +42,19 @@ function extractData(html) {
   let SV3 = null;
   let SV4 = null;
   let SV5 = null;
-  
+  let SV6 = null;
   if (jsonData && jsonData.props && jsonData.props.pageProps && jsonData.props.pageProps.product) {
     const productData = jsonData.props.pageProps.product;
     SV1 = productData.mallPid;
     SV2 = productData.nvMid;
-    SV3 = productData.itemType;
-    SV4 = productData.productUrl;
-    SV5 = productData.mallUrl;
+    SV3 = productData.matchNvMid;
+    SV4 = productData.itemType;
+    SV5 = productData.productUrl;
+    SV6 = productData.mallUrl;
   } else {
     console.error('유효하지 않은 JSON 정보:', jsonData);
   }
-  return { SV1, SV2, SV3, SV4, SV5 };
+  return { SV1, SV2, SV3, SV4, SV5, SV6 };
 }
 
 function extractMid(html) {
