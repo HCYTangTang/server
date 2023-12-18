@@ -32,6 +32,19 @@ app.get('/product2/:productid', async (req, res) => {
   }
 });
 
+// 상품 지수에 대한 데이터 JSON 추출
+app.get('/score', async (req, res) => {
+  const { keyword } = req.query;
+  try {
+    const localServerResponse = await axios.get(`http://218.38.65.91:3000/score?keyword=${encodeURIComponent(keyword)}`);
+    const data = localServerResponse.data;
+    res.json(data);
+  } catch (error) {
+    console.error('데이터를 가져오는 중 오류: ', error);
+    res.status(500).send('error: '에러 발생원인');
+  }
+});
+
 function extractData(html) {
   const $ = cheerio.load(html);
   const scriptTag = $('#__NEXT_DATA__');
