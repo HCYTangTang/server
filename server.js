@@ -33,7 +33,7 @@ app.get('/product2/:productid', async (req, res) => {
 });
 
 // 상품 지수에 대한 데이터 JSON 추출
-app.post('/api/search', async (req, res) => {
+app.post('/api/search', express.json(), async (req, res) => {
   const { keyword } = req.body;
   try {
     const localServerResponse = await axios.get(`http://218.38.65.91:3000/score?keyword=${encodeURIComponent(keyword)}`);
@@ -41,7 +41,7 @@ app.post('/api/search', async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error('데이터를 가져오는 중 오류: ', error);
-    res.status(500).send(`error: ${error.message}`);
+    res.status(500).json({ error: error.message });
   }
 });
 
