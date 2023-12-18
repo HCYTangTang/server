@@ -41,7 +41,7 @@ app.post('/api/search', async (req, res) => {
     res.json(data);
   } catch (error) {
     console.error('데이터를 가져오는 중 오류: ', error);
-    res.status(500).send('error: '에러 발생원인');
+    res.status(500).send(`error: ${error.message}`);
   }
 });
 
