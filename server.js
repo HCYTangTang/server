@@ -15,7 +15,7 @@ app.get('/product/:id', async (req, res) => {
     res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: '에러 발생원인' });
+    res.status(500).json({ error: error.message });
   }
 });
 
@@ -56,7 +56,7 @@ app.get('/product2/:productid', async (req, res) => {
     res.json({ nvMid });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: '에러 발생원인' });
+    res.status(500).json({ error: error.message });
   }
 });
 
