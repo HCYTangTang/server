@@ -11,7 +11,7 @@ app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`);
-    const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractProductData(data);
+    const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(data);
     res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
     console.error(error);
@@ -19,35 +19,30 @@ app.get('/product/:id', async (req, res) => {
   }
 });
 
-function extractProductData(html) {
-  try {
-    const $ = cheerio.load(html);
-    const scriptTagContent = $('#__NEXT_DATA__').html();
-    
-    if (!scriptTagContent) {
-      throw new Error('NEXT 데이터가 없음');
-    }
+function extractData(html) {
+  const $ = cheerio.load(html);
+  const scriptTag = $('#__NEXT_DATA__');
+  const jsonData = JSON.parse(scriptTag.html());
 
-    const jsonData = JSON.parse(scriptTagContent);
+  let SV1 = null;
+  let SV2 = null;
+  let SV3 = null;
+  let SV4 = null;
+  let SV5 = null;
+  let SV6 = null;
 
+  if (jsonData && jsonData.props && jsonData.props.pageProps && jsonData.props.pageProps.product) {
     const productData = jsonData.props.pageProps.product;
-    
-    if (!productData) {
-      throw new Error('상품 데이터가 없음');
-    }
-
-    return {
-      SV1: productData.mallPid,
-      SV2: productData.nvMid,
-      SV3: productData.matchNvMid,
-      SV4: productData.itemType,
-      SV5: productData.productUrl,
-      SV6: productData.mallUrl
-    };
-  } catch (error) {
-    console.error('JSON 파싱 오류:', error);
-    return null; // 파싱 오류 시 null 반환
+    SV1 = productData.mallPid;
+    SV2 = productData.nvMid;
+    SV3 = productData.matchNvMid;
+    SV4 = productData.itemType;
+    SV5 = productData.productUrl;
+    SV6 = productData.mallUrl;
+  } else {
+    console.error('Invalid JSON data:', jsonData);
   }
+  return { SV1, SV2, SV3, SV4, SV5, SV6 };
 }
 
 // 네이버 스마트스토어 상품 페이지에서 nvMid 추출
