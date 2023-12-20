@@ -19,6 +19,34 @@ app.get('/product/:id', async (req, res) => {
   }
 });
 
+function extractData(html) {
+  try {
+    const $ = cheerio.load(html);
+    const scriptTag = $('#__NEXT_DATA__');
+    if (!scriptTag || !scriptTag.html()) {
+      throw new Error('NEXT 데이터가 없음');
+    }
+    const jsonData = JSON.parse(scriptTag.html());
+    if (!jsonData || !jsonData.props || !jsonData.props.pageProps || !jsonData.props.pageProps.product) {
+      console.error('유효하지 않은 JSON 정보:', jsonData);
+      return null;
+    }
+    
+    const productData = jsonData.props.pageProps.product;
+    return {
+      SV1: productData.mallPid,
+      SV2: productData.nvMid,
+      SV3: productData.matchNvMid,
+      SV4: productData.itemType,
+      SV5: productData.productUrl,
+      SV6: productData.mallUrl
+    };
+  } catch (error) {
+    console.error('JSON 파싱 오류:', error);
+    return null; // 또는 오류를 나타내는 다른 적절한 값
+  }
+}
+
 // 네이버 스마트스토어 상품 페이지에서 nvMid 추출
 app.get('/product2/:productid', async (req, res) => {
   const { productid } = req.params;
@@ -32,6 +60,18 @@ app.get('/product2/:productid', async (req, res) => {
   }
 });
 
+function extractMid(html) {
+  const $ = cheerio.load(html);
+  const scriptContent = $('body > script:nth-child(2)').html();
+
+  let nvMid = null;
+  const match = scriptContent.match(/"syncNvMid"\s*:\s*(\d+)/);
+  if (match && match[1]) {
+    nvMid = match[1];
+  }
+  return { nvMid };
+}
+
 // 상품 지수에 대한 데이터 JSON 추출
 app.post('/api/search', express.json(), async (req, res) => {
   const { keyword } = req.body;
@@ -44,43 +84,6 @@ app.post('/api/search', express.json(), async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
-
-function extractData(html) {
-  const $ = cheerio.load(html);
-  const scriptTag = $('#__NEXT_DATA__');
-  const jsonData = JSON.parse(scriptTag.html());
-
-  let SV1 = null;
-  let SV2 = null;
-  let SV3 = null;
-  let SV4 = null;
-  let SV5 = null;
-  let SV6 = null;
-  if (jsonData && jsonData.props && jsonData.props.pageProps && jsonData.props.pageProps.product) {
-    const productData = jsonData.props.pageProps.product;
-    SV1 = productData.mallPid;
-    SV2 = productData.nvMid;
-    SV3 = productData.matchNvMid;
-    SV4 = productData.itemType;
-    SV5 = productData.productUrl;
-    SV6 = productData.mallUrl;
-  } else {
-    console.error('유효하지 않은 JSON 정보:', jsonData);
-  }
-  return { SV1, SV2, SV3, SV4, SV5, SV6 };
-}
-
-function extractMid(html) {
-  const $ = cheerio.load(html);
-  const scriptContent = $('body > script:nth-child(2)').html();
-
-  let nvMid = null;
-  const match = scriptContent.match(/"syncNvMid"\s*:\s*(\d+)/);
-  if (match && match[1]) {
-    nvMid = match[1];
-  }
-  return { nvMid };
-}
 
 const port = 3000;
 app.listen(port, () => console.log(`서버 PORT: ${port}`));
