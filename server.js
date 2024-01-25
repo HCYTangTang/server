@@ -93,8 +93,11 @@ app.get('/rankup', async (req, res) => {
     $('.chartList_item_keyword__m_koH').each((index, element) => {
       const rank = $(element).find('.chartList_rank__ZTvTo').text();
       const status = $(element).find('.chartList_status__YiyMu').text();
-      const keyword = $(element).text().replace(rank, '').replace(status, '').trim();
+      let keyword = $(element).text().replace(rank, '').replace(status, '').trim();
 
+      // "상품펼치기" 문자열 제거
+      keyword = keyword.replace('상품펼치기', '').trim();
+      
       scrapedData.push({ rank, status, keyword });
     });
 
