@@ -83,5 +83,26 @@ app.post('/api/search', express.json(), async (req, res) => {
   }
 });
 
+// 쇼핑 인기도키워드 순위 조회
+app.get('/scrape', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://search.shopping.naver.com/best/category/keyword?categoryCategoryId=ALL&categoryDemo=A00&categoryRootCategoryId=ALL&chartRank=1&period=P1D');
+    const $ = cheerio.load(data);
+    const scrapedData = [];
+
+    $('.chartList_item_keyword__m_koH').each((index, element) => {
+      const rank = $(element).find('.chartList_rank__ZTvTo').text();
+      const status = $(element).find('.chartList_status__YiyMu').text();
+      const keyword = $(element).text().replace(rank, '').replace(status, '').trim();
+
+      scrapedData.push({ rank, status, keyword });
+    });
+
+    res.json(scrapedData);
+  } catch (error) {
+    res.status(500).send('Error occurred while scraping data');
+  }
+});
+
 const port = 3000;
 app.listen(port, () => console.log(`서버 PORT: ${port}`));
