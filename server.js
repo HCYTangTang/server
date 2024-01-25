@@ -84,7 +84,7 @@ app.post('/api/search', express.json(), async (req, res) => {
 });
 
 // 쇼핑 인기도키워드 순위 조회
-app.get('/scrape', async (req, res) => {
+app.get('/rankup', async (req, res) => {
   try {
     const { data } = await axios.get('https://search.shopping.naver.com/best/category/keyword?categoryCategoryId=ALL&categoryDemo=A00&categoryRootCategoryId=ALL&chartRank=1&period=P1D');
     const $ = cheerio.load(data);
