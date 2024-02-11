@@ -110,5 +110,31 @@ app.get('/rankup', async (req, res) => {
   }
 });
 
+// 인기 브랜드 순위 조회
+app.get('/brandrank', async (req, res) => {
+  try {
+    const url = 'https://search.shopping.naver.com/best/_next/data/5Fy6k8u15Ce7SU3-qCiek/category/brand.json?categoryCategoryId=ALL';
+    const response = await axios.get(url);
+    const brands = response.data.pageProps.initialState.category.brand.data.charts;
+
+    // 상위 20개 브랜드 정보만 추출
+    const topBrands = brands.slice(0, 20).map(brand => ({
+      rank: brand.rank,
+      change: brand.change,
+      brandSeq: brand.brandSeq,
+      brandName: brand.brandName,
+      exposeBrandName: brand.exposeBrandName
+    }));
+
+    res.json(topBrands);
+  } catch (error) {
+    res.status(500).send('데이터를 가져오는 중 오류가 발생했습니다.');
+  }
+});
+
+app.listen(port, () => {
+  console.log(`서버가 ${port}번 포트에서 실행 중입니다.`);
+});
+
 const port = 3000;
 app.listen(port, () => console.log(`서버 PORT: ${port}`));
