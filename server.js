@@ -115,10 +115,9 @@ app.get('/brandrank', async (req, res) => {
   try {
     const url = 'https://search.shopping.naver.com/best/_next/data/5Fy6k8u15Ce7SU3-qCiek/category/brand.json?categoryCategoryId=ALL';
     const response = await axios.get(url);
-    const brands = response.data.pageProps.initialState.category.brand.data.charts;
 
-    // 상위 20개 브랜드 정보만 추출
-    const topBrands = brands.slice(0, 20).map(brand => ({
+    const charts = response.data.pageProps.initialState.category.brand.data.charts;
+    const brandData = charts.map(brand => ({
       rank: brand.rank,
       change: brand.change,
       brandSeq: brand.brandSeq,
@@ -126,8 +125,9 @@ app.get('/brandrank', async (req, res) => {
       exposeBrandName: brand.exposeBrandName
     }));
 
-    res.json(topBrands);
+    res.json(brandData);
   } catch (error) {
+    console.error('데이터를 가져오는 중 오류가 발생했습니다:', error);
     res.status(500).send('데이터를 가져오는 중 오류가 발생했습니다.');
   }
 });
