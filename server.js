@@ -113,23 +113,27 @@ app.get('/rankup', async (req, res) => {
 // 인기 브랜드 순위 조회
 app.get('/brandrank', async (req, res) => {
   try {
-    const url = 'https://search.shopping.naver.com/best/_next/data/5Fy6k8u15Ce7SU3-qCiek/category/brand.json?categoryCategoryId=ALL';
-    const response = await axios.get(url);
+    const { data } = await axios.get('https://search.shopping.naver.com/best/_next/data/5Fy6k8u15Ce7SU3-qCiek/category/brand.json?categoryCategoryId=ALL');
+    const $ = cheerio.load(data);
+    const scrapedData = [];
 
-    // JSON 데이터에서 필요한 부분 추출
-    const charts = response.data.pageProps.initialState.category.brand.data.charts;
-    const brandData = charts.map(brand => ({
-      rank: brand.rank,
-      change: brand.change,
-      brandSeq: brand.brandSeq,
-      brandName: brand.brandName,
-      exposeBrandName: brand.exposeBrandName
-    }));
+    $('.chartList_item_keyword__m_koH').each((index, element) => {
+      const rank = $(element).find('.chartList_rank__ZTvTo').text();
+      const status = $(element).find('.chartList_status__YiyMu').text();
+      let keyword = $(element).text().replace(rank, '').replace(status, '').trim();
 
-    res.json(brandData);
+      // // "상품" 뒤에 오는 모든 문자열 제거
+      // const productStringIndex = keyword.indexOf('상품');
+      // if (productStringIndex !== -1) {
+      //   keyword = keyword.substring(0, productStringIndex).trim();
+      // }
+      
+      scrapedData.push({ rank, status, keyword });
+    });
+
+    res.json(scrapedData);
   } catch (error) {
-    console.error('데이터를 가져오는 중 오류가 발생했습니다:', error);
-    res.status(500).send('데이터를 가져오는 중 오류가 발생했습니다.');
+    res.status(500).send('Error occurred while scraping data');
   }
 });
 
