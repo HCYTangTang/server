@@ -113,7 +113,7 @@ app.get('/rankup', async (req, res) => {
 // 인기 브랜드 순위 조회
 app.get('/brandrank', async (req, res) => {
   try {
-    const { data } = await axios.get('https://search.shopping.naver.com/best/_next/data/5Fy6k8u15Ce7SU3-qCiek/category/brand.json?categoryCategoryId=ALL');
+    const { data } = await axios.get('https://search.shopping.naver.com/best/category/brand?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&chartRank=1&period=P1D');
     const $ = cheerio.load(data);
     const scrapedData = [];
 
