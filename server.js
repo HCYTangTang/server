@@ -116,7 +116,13 @@ app.get('/brandrank', async (req, res) => {
     const url = 'https://search.shopping.naver.com/best/_next/data/5Fy6k8u15Ce7SU3-qCiek/category/brand.json?categoryCategoryId=ALL';
     const response = await axios.get(url);
 
-    const charts = response.data.pageProps.initialState.category.brand.data.charts;
+    // HTML 데이터에서 JSON 문자열 추출
+    const $ = cheerio.load(response.data);
+    const jsonDataString = $('pre').text();
+    const jsonData = JSON.parse(jsonDataString);
+
+    // 필요한 데이터만 추출
+    const charts = jsonData.pageProps.initialState.category.brand.data.charts;
     const brandData = charts.map(brand => ({
       rank: brand.rank,
       change: brand.change,
