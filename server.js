@@ -122,11 +122,11 @@ app.get('/brandrank', async (req, res) => {
       const status = $(element).find('.chartList_status__YiyMu').text();
       let keyword = $(element).text().replace(rank, '').replace(status, '').trim();
 
-      // // "상품" 뒤에 오는 모든 문자열 제거
-      // const productStringIndex = keyword.indexOf('상품');
-      // if (productStringIndex !== -1) {
-      //   keyword = keyword.substring(0, productStringIndex).trim();
-      // }
+      // "상품" 뒤에 오는 모든 문자열 제거
+      const productStringIndex = keyword.indexOf('상품');
+      if (productStringIndex !== -1) {
+        keyword = keyword.substring(0, productStringIndex).trim();
+      }
       
       scrapedData.push({ rank, status, keyword });
     });
