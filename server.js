@@ -144,22 +144,41 @@ app.get('/sellrank', async (req, res) => {
     const $ = cheerio.load(data);
     const scrapedData = [];
 
-    $('.chartList_item_keyword__m_koH').each((index, element) => {
-      const rank = $(element).find('.chartList_rank__ZTvTo').text();
-      const status = $(element).find('.chartList_status__YiyMu').text();
-      let keyword = $(element).text().replace(rank, '').replace(status, '').trim();
+    $('.imageProduct_item__KZB_F').each((index, element) => {
+      const rank = $(element).find('.imageProduct_rank__lEppJ').text();
+      const imageUrl = $(element).find('.imageProduct_thumbnail__Szi5F img').attr('src');
+      const title = $(element).find('.imageProduct_title__Wdeb1').text();
+      const price = $(element).find('.imageProduct_price__W6pU1').text();
+      const deliveryFee = $(element).find('.imageProduct_delivery_fee__a2zzJ').text();
+      const benefit = $(element).find('.imageProduct_benefit__y9I4_').text();
+      const storeName = $(element).find('.imageProduct_mall__tJkQR').text();
+      const link = $(element).find('.imageProduct_link_item__1NP7w').attr('href');
+      const nvMid = $(element).find('.imageProduct_link_item__1NP7w').data('i');
+      const catId = $(element).find('.imageProduct_link_item__1NP7w').attr('catId');
 
-      // "상품" 뒤에 오는 모든 문자열 제거
-      const productStringIndex = keyword.indexOf('상품');
-      if (productStringIndex !== -1) {
-        keyword = keyword.substring(0, productStringIndex).trim();
-      }
-      
-      scrapedData.push({ rank, status, keyword });
+      // 가격비교 정보를 가져오기 위한 선택자 수정이 필요할 수 있습니다.
+      const compareLink = $(element).find('.imageProduct_btn_store__bL4eB').attr('href');
+      const compareNumber = $(element).find('.imageProduct_btn_store__bL4eB em').text();
+
+      scrapedData.push({
+        rank,
+        imageUrl,
+        title,
+        price: price.replace('원', '').trim(),
+        deliveryFee: deliveryFee.includes('배송비') ? deliveryFee.replace('배송비', '').trim() : null,
+        benefit: benefit ? benefit.trim() : null,
+        storeName: storeName.trim(),
+        link,
+        nvMid,
+        catId,
+        compareLink: compareLink || null,
+        compareNumber: compareNumber ? compareNumber.replace(/[^\d]/g, '') : null // 판매처 숫자만 추출
+      });
     });
 
     res.json(scrapedData);
   } catch (error) {
+    console.error(error);
     res.status(500).send('Error occurred while scraping data');
   }
 });
