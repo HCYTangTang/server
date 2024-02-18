@@ -153,10 +153,11 @@ app.get('/sellrank', async (req, res) => {
       const rank = $(element).find('.imageProduct_rank__lEppJ').text();
       // 이미지 URL 추출 부분
       const imageElement = $(element).find('.imageProduct_thumbnail__Szi5F img');
-        let imageUrl = $(element).find('.imageProduct_thumbnail__Szi5F img').attr('data-src');
-          if (!imageUrl) {
-            imageUrl = $(element).find('.imageProduct_thumbnail__Szi5F img').attr('src');
-          }
+      const imageUrl = imageElement.attr('data-src') || imageElement.attr('src');
+        // let imageUrl = $(element).find('.imageProduct_thumbnail__Szi5F img').attr('data-src');
+        //   if (!imageUrl) {
+        //     imageUrl = $(element).find('.imageProduct_thumbnail__Szi5F img').attr('src');
+        //   }
       
       // 상품명, 가격 등 나머지 정보 추출 부분
       const title = $(element).find('.imageProduct_title__Wdeb1').text();
