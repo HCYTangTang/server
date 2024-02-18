@@ -164,10 +164,8 @@ app.get('/sellrank', async (req, res) => {
       const linkElement = $(element).find('.imageProduct_link_item__1NP7w');
       const link = linkElement.attr('href');
       const nvMid = linkElement.data('i');
-      // URL에서 쿼리 파라미터를 파싱하여 catId를 추출하는 코드로 수정해야 할 수 있습니다.
-      const urlParams = new URLSearchParams(new URL(link).search);
-      const parsedUrl = url.parse(link, true);
-      const catId = parsedUrl.query.catId;
+      const parsedUrl = new URL(link, 'https://search.shopping.naver.com');
+      const catId = parsedUrl.searchParams.get('catId');
 
       // 가격비교 정보 추출 부분
       const compareLink = $(element).find('.imageProduct_btn_store__bL4eB').attr('href');
