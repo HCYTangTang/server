@@ -140,14 +140,21 @@ app.get('/brandrank', async (req, res) => {
 // 많이 구매한 상품 순위 조회
 app.get('/sellrank', async (req, res) => {
   try {
-    const { data } = await axios.get('https://search.shopping.naver.com/best/category/purchase?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&period=P1D');
+        const { data } = await axios.get('https://search.shopping.naver.com/best/category/purchase', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3', // 예시 유저 에이전트
+        'Referer': 'https://search.shopping.naver.com/' // 필요한 경우
+      }
+    });
     const $ = cheerio.load(data);
     const scrapedData = [];
 
     $('.imageProduct_item__KZB_F').each((index, element) => {
       const rank = $(element).find('.imageProduct_rank__lEppJ').text();
-      const linkElement = $(element).find('.imageProduct_link_item__1NP7w.linkAnchor');
-      const imageUrl = linkElement.find('img').attr('src'); // 이미지 URL 추출
+      // 이미지 URL 추출
+      const imageElement = $(element).find('.imageProduct_thumbnail__Szi5F img');
+      let imageUrl = imageElement.attr('src') || imageElement.attr('data-src');
+      
       const title = $(element).find('.imageProduct_title__Wdeb1').text();
       const price = $(element).find('.imageProduct_price__W6pU1').text();
       const deliveryFee = $(element).find('.imageProduct_delivery_fee__a2zzJ').text();
