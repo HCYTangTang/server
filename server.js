@@ -152,8 +152,8 @@ app.get('/sellrank', async (req, res) => {
     $('.imageProduct_item__KZB_F').each((index, element) => {
       const rank = $(element).find('.imageProduct_rank__lEppJ').text();
       // 이미지 URL 추출 부분
-      const imageElement = $(element).find('.imageProduct_thumbnail__Szi5F img');
-      let imageUrl = imageElement.attr('data-src') || imageElement.attr('data-original') || imageElement.attr('data-lazy-src') || imageElement.attr('src');
+      const imageElement = $(element).find('img');
+      const imageUrl = imageElement.attr('src');
       
       // 상품명, 가격 등 나머지 정보 추출 부분
       const title = $(element).find('.imageProduct_title__Wdeb1').text();
