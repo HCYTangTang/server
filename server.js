@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const cheerio = require('cheerio');
 const app = express();
+const url = require('url');
 
 app.use(cors({ origin: '*' }));
 
@@ -140,10 +141,9 @@ app.get('/brandrank', async (req, res) => {
 // 많이 구매한 상품 순위 조회
 app.get('/sellrank', async (req, res) => {
   try {
-        const { data } = await axios.get('https://search.shopping.naver.com/best/category/purchase', {
+    const { data } = await axios.get('https://search.shopping.naver.com/best/category/purchase?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&period=P1D', {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3', // 예시 유저 에이전트
-        'Referer': 'https://search.shopping.naver.com/' // 필요한 경우
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
       }
     });
     const $ = cheerio.load(data);
@@ -151,23 +151,29 @@ app.get('/sellrank', async (req, res) => {
 
     $('.imageProduct_item__KZB_F').each((index, element) => {
       const rank = $(element).find('.imageProduct_rank__lEppJ').text();
-      // 이미지 URL 추출
+      // 이미지 URL 추출 부분
       const imageElement = $(element).find('.imageProduct_thumbnail__Szi5F img');
       let imageUrl = imageElement.attr('src') || imageElement.attr('data-src');
       
+      // 상품명, 가격 등 나머지 정보 추출 부분
       const title = $(element).find('.imageProduct_title__Wdeb1').text();
       const price = $(element).find('.imageProduct_price__W6pU1').text();
       const deliveryFee = $(element).find('.imageProduct_delivery_fee__a2zzJ').text();
       const benefit = $(element).find('.imageProduct_benefit__y9I4_').text();
       const storeName = $(element).find('.imageProduct_mall__tJkQR').text();
+      const linkElement = $(element).find('.imageProduct_link_item__1NP7w');
       const link = linkElement.attr('href');
       const nvMid = linkElement.data('i');
-      const catId = linkElement.attr('catId');
+      // URL에서 쿼리 파라미터를 파싱하여 catId를 추출하는 코드로 수정해야 할 수 있습니다.
+      const urlParams = new URLSearchParams(new URL(link).search);
+      const parsedUrl = url.parse(link, true);
+      const catId = parsedUrl.query.catId;
 
-      // 가격비교 정보를 가져오기 위한 선택자 수정이 필요할 수 있습니다.
+      // 가격비교 정보 추출 부분
       const compareLink = $(element).find('.imageProduct_btn_store__bL4eB').attr('href');
       const compareNumber = $(element).find('.imageProduct_btn_store__bL4eB em').text();
 
+      // 추출한 정보를 객체에 저장
       scrapedData.push({
         rank,
         imageUrl,
@@ -180,12 +186,14 @@ app.get('/sellrank', async (req, res) => {
         nvMid,
         catId,
         compareLink: compareLink || null,
-        compareNumber: compareNumber ? compareNumber.replace(/[^\d]/g, '') : null // 판매처 숫자만 추출
+        compareNumber: compareNumber ? compareNumber.replace(/[^\d]/g, '') : null // 숫자만 추출
       });
     });
 
+    // JSON 형태로 클라이언트에게 데이터 응답
     res.json(scrapedData);
   } catch (error) {
+    // 에러 처리
     console.error(error);
     res.status(500).send('Error occurred while scraping data');
   }
