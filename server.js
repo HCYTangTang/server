@@ -5,13 +5,16 @@ const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
 
+// 공통으로 사용할 사용자 에이전트
+const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+
 app.use(cors({ origin: '*' }));
 
 // 네이버 쇼핑 상품 페이지에서 mallPid 추출
 app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`);
+    const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`, { headers: { 'User-Agent': USER_AGENT } });
     const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(data);
     res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
@@ -50,7 +53,7 @@ function extractData(html) {
 app.get('/product2/:productid', async (req, res) => {
   const { productid } = req.params;
   try {
-    const { data } = await axios.get(`https://smartstore.naver.com/main/products/${productid}`);
+    const { data } = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, { headers: { 'User-Agent': USER_AGENT } });
     const { nvMid } = extractMid(data);
     res.json({ nvMid });
   } catch (error) {
