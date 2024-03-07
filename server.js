@@ -5,16 +5,18 @@ const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
 
-// 공통으로 사용할 사용자 에이전트
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
-
 app.use(cors({ origin: '*' }));
+
+const Headers = {
+  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Referrer': 'https://search.shopping.naver.com/'
+};
 
 // 네이버 쇼핑 상품 페이지에서 mallPid 추출
 app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`, { headers: { 'User-Agent': USER_AGENT } });
+    const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`, { headers: Headers });
     const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(data);
     res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
@@ -53,7 +55,7 @@ function extractData(html) {
 app.get('/product2/:productid', async (req, res) => {
   const { productid } = req.params;
   try {
-    const { data } = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, { headers: { 'User-Agent': USER_AGENT } });
+    const { data } = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, { headers: Headers });
     const { nvMid } = extractMid(data);
     res.json({ nvMid });
   } catch (error) {
@@ -90,7 +92,7 @@ app.post('/api/search', express.json(), async (req, res) => {
 // 쇼핑 인기도키워드 순위 조회
 app.get('/rankup', async (req, res) => {
   try {
-    const { data } = await axios.get('https://search.shopping.naver.com/best/category/keyword?categoryCategoryId=ALL&categoryDemo=A00&categoryRootCategoryId=ALL&chartRank=1&period=P1D');
+    const { data } = await axios.get('https://search.shopping.naver.com/best/category/keyword?categoryCategoryId=ALL&categoryDemo=A00&categoryRootCategoryId=ALL&chartRank=1&period=P1D'), { headers: Headers });
     const $ = cheerio.load(data);
     const scrapedData = [];
 
@@ -117,7 +119,7 @@ app.get('/rankup', async (req, res) => {
 // 인기 브랜드 순위 조회
 app.get('/brandrank', async (req, res) => {
   try {
-    const { data } = await axios.get('https://search.shopping.naver.com/best/category/brand?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&chartRank=1&period=P1D');
+    const { data } = await axios.get('https://search.shopping.naver.com/best/category/brand?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&chartRank=1&period=P1D'), { headers: Headers });
     const $ = cheerio.load(data);
     const scrapedData = [];
 
@@ -144,11 +146,7 @@ app.get('/brandrank', async (req, res) => {
 // 많이 구매한 상품 순위 조회
 app.get('/sellrank', async (req, res) => {
   try {
-    const { data } = await axios.get('https://search.shopping.naver.com/best/category/purchase?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&period=P1D', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
-      }
-    });
+    const { data } = await axios.get('https://search.shopping.naver.com/best/category/purchase?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&period=P1D', { headers: Headers });
     const $ = cheerio.load(data);
     const scrapedData = [];
 
