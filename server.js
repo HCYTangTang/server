@@ -59,9 +59,16 @@ function extractData(html) {
 app.get('/product2/:productid', async (req, res) => {
   const { productid } = req.params;
   try {
-    console.log(`Requesting: https://smartstore.naver.com/main/products/${productid}`);
-    const { data } = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, { headers: Headers2 });
-    const { nvMid } = extractMid(data);
+    // Axios 요청
+    const response = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, {
+      headers: Headers2,
+      maxRedirects: 5 // 리디렉션 최대 횟수 설정
+    });
+
+    // HTML에서 nvMid 추출
+    const nvMid = extractMid(response.data);
+
+    // 응답
     res.json({ nvMid });
   } catch (error) {
     console.error(error);
