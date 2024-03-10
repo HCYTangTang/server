@@ -104,7 +104,10 @@ app.post('/api/search', express.json(), async (req, res) => {
 // 쇼핑 인기도키워드 순위 조회
 app.get('/rankup', async (req, res) => {
   try {
-    const { data } = await axios.get('https://search.shopping.naver.com/best/category/keyword?categoryCategoryId=ALL&categoryDemo=A00&categoryRootCategoryId=ALL&chartRank=1&period=P1D', { headers: Headers1 });
+    // query parameter 'period' Data Read (default: P1D)
+    const period = req.query.period || 'P1D';
+    const url = `https://search.shopping.naver.com/best/category/keyword?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&chartRank=1&period=${period}`;
+    const { data } = await axios.get(url, { headers: Headers1 });
     const $ = cheerio.load(data);
     const scrapedData = [];
 
@@ -131,7 +134,11 @@ app.get('/rankup', async (req, res) => {
 // 인기 브랜드 순위 조회
 app.get('/brandrank', async (req, res) => {
   try {
-    const { data } = await axios.get('https://search.shopping.naver.com/best/category/brand?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&chartRank=1&period=P1D', { headers: Headers1 });
+    // query parameter 'period' Data Read (default: P1D)
+    const period = req.query.period || 'P1D';
+    const url = `https://search.shopping.naver.com/best/category/brand?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&chartRank=1&period=${period}`;
+    
+    const { data } = await axios.get(url, { headers: Headers1 });
     const $ = cheerio.load(data);
     const scrapedData = [];
 
