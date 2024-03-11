@@ -20,7 +20,6 @@ const Headers2 = {
   'Sec-Fetch-User': '?1',
   'Upgrade-Insecure-Requests': '1',
   'Referrer': 'https://smartstore.naver.com/',
-  'Cookie': 'wcs_bt=s_258544195223503430:1710149227; _fwb=19C7nRT4Dt1aKHUTxSb0VG.1710145982279; NNB=HNCGYIN6YHXGK' // 여기에 쿠키 추가
 };
 
 // 네이버 쇼핑 상품 페이지에서 mallPid 추출
