@@ -91,7 +91,7 @@ function extractMid(html) {
   if (match && match[1]) {
     nvMid = match[1];
   }
-  return { nvMid };
+  return nvMid; // 객체 형태가 아닌 단일 값으로 반환
 }
 
 // 상품 지수에 대한 데이터 JSON 추출
