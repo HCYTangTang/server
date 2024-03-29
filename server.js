@@ -8,11 +8,14 @@ const puppeteer = require('puppeteer-core');
 
 app.use(cors({ origin: '*' }));
 
-const browser = await puppeteer.launch({
-  executablePath: process.env.CHROME_PATH, // 환경 변수에서 Chrome 경로를 가져옴
-  args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  headless: true
-});
+async function launchBrowser() {
+  return await puppeteer.launch({
+    executablePath: process.env.CHROME_PATH, // 환경 변수에서 Chrome 경로를 가져옴
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    headless: true
+  });
+}
+
 
 const Headers1 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -44,16 +47,15 @@ app.get('/product/:id', async (req, res) => {
     await page.goto(`https://search.shopping.naver.com/product/${id}`, { waitUntil: 'networkidle2' });
 
     const content = await page.content();
-    
     const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(content);
     await browser.close();
-    
     res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Error fetching product data.' });
   }
 });
+
 function extractData(html) {
   const $ = cheerio.load(html);
   const scriptTag = $('#__NEXT_DATA__');
