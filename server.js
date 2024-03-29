@@ -5,6 +5,9 @@ const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
 const puppeteer = require('puppeteer');
+const browser = await puppeteer.launch({
+  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
+});
 
 app.use(cors({ origin: '*' }));
 
@@ -29,14 +32,7 @@ const Headers2 = {
   'Referrer': 'https://smartstore.naver.com/',
 };
 
-async function fetchDynamicContent(url) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.goto(url, { waitUntil: 'networkidle0' });
-  const content = await page.content();
-  await browser.close();
-  return content;
-}
+
 
 // 네이버 쇼핑 상품 페이지에서 mallPid 추출
 app.get('/product/:id', async (req, res) => {
