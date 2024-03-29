@@ -86,14 +86,11 @@ app.get('/product2/:productid', async (req, res) => {
   const { productid } = req.params;
   try {
     // Axios 요청
-    const response = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, {
-      headers: Headers2,
-      maxRedirects: 5 // 리디렉션 최대 횟수 설정
-    });
+    const url = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, { headers: Headers2 });
     const html = await fetchDynamicContent(url);
-
+    
     // HTML에서 nvMid 추출
-    const nvMid = extractMid(response.data);
+    const nvMid = extractMid(html);
 
     // 응답
     res.json({ nvMid });
@@ -112,7 +109,7 @@ function extractMid(html) {
   if (match && match[1]) {
     nvMid = match[1];
   }
-  return nvMid; // 객체 형태가 아닌 단일 값으로 반환
+  return nvMid;
 }
 
 // 상품 지수에 대한 데이터 JSON 추출
