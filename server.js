@@ -4,29 +4,25 @@ const cors = require('cors');
 const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
-const puppeteer = require('puppeteer-core');
-
+const puppeteer = require('puppeteer');
 app.use(cors({ origin: '*' }));
 
-const browser = await puppeteer.launch({
-  executablePath: process.env.CHROME_PATH, // 환경 변수에서 Chrome 경로를 가져옴
-  args: ['--no-sandbox', '--disable-setuid-sandbox'],
-  headless: true
-});
+async function fetchPageContent(url) {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.goto(url, { waitUntil: 'networkidle2' });
+  const content = await page.content();
+  await browser.close();
+  return content;
+}
 
 const Headers1 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-  'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
-  'Sec-Fetch-Dest': 'document',
-  'Sec-Fetch-Mode': 'navigate',
-  'Sec-Fetch-Site': 'same-origin',
-  'Sec-Fetch-User': '?1',
-  'Upgrade-Insecure-Requests': '1',
   'Referrer': 'https://search.shopping.naver.com/'
 };
 const Headers2 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-  'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
+  'Accept-Language': 'ko-KR,ko;q=0.9',
   'Sec-Fetch-Dest': 'document',
   'Sec-Fetch-Mode': 'navigate',
   'Sec-Fetch-Site': 'none',
@@ -34,24 +30,6 @@ const Headers2 = {
   'Upgrade-Insecure-Requests': '1',
   'Referrer': 'https://smartstore.naver.com/',
 };
-
-// 네이버 쇼핑 상품 페이지에서 mallPid 추출
-app.get('/product/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const browser = await launchBrowser();
-    const page = await browser.newPage();
-    await page.goto(`https://search.shopping.naver.com/product/${id}`, { waitUntil: 'networkidle2' });
-
-    const content = await page.content();
-    const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(content);
-    await browser.close();
-    res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Error fetching product data.' });
-  }
-});
 
 function extractData(html) {
   const $ = cheerio.load(html);
@@ -77,28 +55,6 @@ function extractData(html) {
   return { SV1, SV2, SV3, SV4, SV5, SV6 };
 }
 
-// 네이버 스마트스토어 상품 페이지에서 nvMid 추출
-app.get('/product2/:productid', async (req, res) => {
-  const { productid } = req.params;
-  try {
-    const browser = await launchBrowser();
-    const page = await browser.newPage();
-    await page.goto(`https://smartstore.naver.com/main/products/${productid}`, { waitUntil: 'networkidle2' });
-    
-    // 페이지의 콘텐츠를 가져오기
-    const content = await page.content();
-    
-    // 기존의 extractMid 함수 사용
-    const nvMid = extractMid(content);
-    await browser.close();
-
-    // 응답
-    res.json({ nvMid });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
-});
 function extractMid(html) {
   const $ = cheerio.load(html);
   const scriptContent = $('body > script:nth-child(2)').html();
@@ -107,8 +63,35 @@ function extractMid(html) {
   if (match && match[1]) {
     nvMid = match[1];
   }
-  return nvMid; // 객체 형태가 아닌 단일 값으로 반환
+  return { nvMid };
 }
+
+// 네이버 쇼핑 상품 페이지에서 mallPid 추출
+app.get('/product/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const html = await fetchPageContent(`https://search.shopping.naver.com/product/${id}`);
+    const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(html);
+    res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 네이버 스마트스토어 상품 페이지에서 nvMid 추출
+app.get('/product2/:productid', async (req, res) => {
+  const { productid } = req.params;
+  try {
+    const html = await fetchPageContent(`https://smartstore.naver.com/main/products/${productid}`);
+    const { nvMid } = extractMid(html);
+    res.json({ nvMid });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 상품 지수에 대한 데이터 JSON 추출
 app.post('/api/search', express.json(), async (req, res) => {
   const { keyword } = req.body;
