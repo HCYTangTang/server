@@ -10,7 +10,6 @@ app.use(cors({ origin: '*' }));
 
 const Headers1 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-  'Sec-Ch-Ua': '"Chromium";v="122", "Not A:Brand";v="24", "Google Chrome";v="122"',
   'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
   'Sec-Fetch-Dest': 'document',
   'Sec-Fetch-Mode': 'navigate',
@@ -21,7 +20,6 @@ const Headers1 = {
 };
 const Headers2 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-  'Sec-Ch-Ua': '"Chromium";v="122", "Not A:Brand";v="24", "Google Chrome";v="122"',
   'Accept-Language': 'ko-KR,ko;q=0.9',
   'Sec-Fetch-Dest': 'document',
   'Sec-Fetch-Mode': 'navigate',
@@ -32,22 +30,21 @@ const Headers2 = {
 };
 
 async function fetchDynamicContent(url) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
+  let browser = await puppeteer.launch();
+  let page = await browser.newPage();
   await page.goto(url, { waitUntil: 'networkidle0' });
-  const content = await page.content();
+  let content = await page.content();
   await browser.close();
   return content;
 }
 
-
 // 네이버 쇼핑 상품 페이지에서 mallPid 추출
 app.get('/product/:id', async (req, res) => {
-  const { id } = req.params;
+  let { id } = req.params;
   try {
-    const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`, { headers: Headers1 });
-    const html = await fetchDynamicContent(url);
-    const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(data);
+    let { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`, { headers: Headers1 });
+    let html = await fetchDynamicContent(url);
+    let { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(data);
     res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
     console.error(error);
@@ -56,9 +53,9 @@ app.get('/product/:id', async (req, res) => {
 });
 
 function extractData(html) {
-  const $ = cheerio.load(html);
-  const scriptTag = $('#__NEXT_DATA__');
-  const jsonData = JSON.parse(scriptTag.html());
+  let $ = cheerio.load(html);
+  let scriptTag = $('#__NEXT_DATA__');
+  let jsonData = JSON.parse(scriptTag.html());
 
   let SV1 = null;
   let SV2 = null;
@@ -68,7 +65,7 @@ function extractData(html) {
   let SV6 = null;
 
   if (jsonData && jsonData.props && jsonData.props.pageProps && jsonData.props.pageProps.product) {
-    const productData = jsonData.props.pageProps.product;
+    let productData = jsonData.props.pageProps.product;
     SV1 = productData.mallPid;
     SV2 = productData.nvMid;
     SV3 = productData.matchNvMid;
@@ -83,18 +80,16 @@ function extractData(html) {
 
 // 네이버 스마트스토어 상품 페이지에서 nvMid 추출
 app.get('/product2/:productid', async (req, res) => {
-  const { productid } = req.params;
+  let { productid } = req.params;
   try {
     // Axios 요청
-    const response = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, {
+    let { data } = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, {
       headers: Headers2,
-      maxRedirects: 5 // 리디렉션 최대 횟수 설정
     });
-    const html = await fetchDynamicContent(url);
-
-    // HTML에서 nvMid 추출
-    const nvMid = extractMid(response.data);
-
+    let html = await fetchDynamicContent(url);
+    let { nvMid } = extractMid(data);
+    res.json({ nvMid });
+    
     // 응답
     res.json({ nvMid });
   } catch (error) {
@@ -104,11 +99,12 @@ app.get('/product2/:productid', async (req, res) => {
 });
 
 function extractMid(html) {
-  const $ = cheerio.load(html);
-  const scriptContent = $('body > script:nth-child(2)').html();
+  let $ = cheerio.load(html);
+  let scriptContent = $('body > script:nth-child(2)').html();
+  let jsonData = JSON.parse(scriptTag.html());
 
   let nvMid = null;
-  const match = scriptContent.match(/"syncNvMid"\s*:\s*(\d+)/);
+  let match = scriptContent.match(/"syncNvMid"\s*:\s*(\d+)/);
   if (match && match[1]) {
     nvMid = match[1];
   }
@@ -117,10 +113,10 @@ function extractMid(html) {
 
 // 상품 지수에 대한 데이터 JSON 추출
 app.post('/api/search', express.json(), async (req, res) => {
-  const { keyword } = req.body;
+  let { keyword } = req.body;
   try {
-    const localServerResponse = await axios.get(`http://218.38.65.91:3000/score?keyword=${encodeURIComponent(keyword)}`);
-    const data = localServerResponse.data;
+    let localServerResponse = await axios.get(`http://218.38.65.91:3000/score?keyword=${encodeURIComponent(keyword)}`);
+    let data = localServerResponse.data;
     res.json(data);
   } catch (error) {
     console.error('데이터를 가져오는 중 오류: ', error);
@@ -132,19 +128,19 @@ app.post('/api/search', express.json(), async (req, res) => {
 app.get('/rankup', async (req, res) => {
   try {
     // query parameter 'period' Data Read (default: P1D)
-    const period = req.query.period || 'P1D';
-    const url = `https://search.shopping.naver.com/best/category/keyword?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&chartRank=1&period=${period}`;
-    const { data } = await axios.get(url, { headers: Headers1 });
-    const $ = cheerio.load(data);
-    const scrapedData = [];
+    let period = req.query.period || 'P1D';
+    let url = `https://search.shopping.naver.com/best/category/keyword?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&chartRank=1&period=${period}`;
+    let { data } = await axios.get(url, { headers: Headers1 });
+    let $ = cheerio.load(data);
+    let scrapedData = [];
 
     $('.chartList_item_keyword__m_koH').each((index, element) => {
-      const rank = $(element).find('.chartList_rank__ZTvTo').text();
-      const status = $(element).find('.chartList_status__YiyMu').text();
+      let rank = $(element).find('.chartList_rank__ZTvTo').text();
+      let status = $(element).find('.chartList_status__YiyMu').text();
       let keyword = $(element).text().replace(rank, '').replace(status, '').trim();
 
       // "상품" 뒤에 오는 모든 문자열 제거
-      const productStringIndex = keyword.indexOf('상품');
+      let productStringIndex = keyword.indexOf('상품');
       if (productStringIndex !== -1) {
         keyword = keyword.substring(0, productStringIndex).trim();
       }
@@ -162,20 +158,20 @@ app.get('/rankup', async (req, res) => {
 app.get('/brandrank', async (req, res) => {
   try {
     // query parameter 'period' Data Read (default: P1D)
-    const period = req.query.period || 'P1D';
-    const url = `https://search.shopping.naver.com/best/category/brand?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&chartRank=1&period=${period}`;
+    let period = req.query.period || 'P1D';
+    let url = `https://search.shopping.naver.com/best/category/brand?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&chartRank=1&period=${period}`;
     
-    const { data } = await axios.get(url, { headers: Headers1 });
-    const $ = cheerio.load(data);
-    const scrapedData = [];
+    let { data } = await axios.get(url, { headers: Headers1 });
+    let $ = cheerio.load(data);
+    let scrapedData = [];
 
     $('.chartList_item_keyword__m_koH').each((index, element) => {
-      const rank = $(element).find('.chartList_rank__ZTvTo').text();
-      const status = $(element).find('.chartList_status__YiyMu').text();
+      let rank = $(element).find('.chartList_rank__ZTvTo').text();
+      let status = $(element).find('.chartList_status__YiyMu').text();
       let keyword = $(element).text().replace(rank, '').replace(status, '').trim();
 
       // "상품" 뒤에 오는 모든 문자열 제거
-      const productStringIndex = keyword.indexOf('상품');
+      let productStringIndex = keyword.indexOf('상품');
       if (productStringIndex !== -1) {
         keyword = keyword.substring(0, productStringIndex).trim();
       }
@@ -192,31 +188,31 @@ app.get('/brandrank', async (req, res) => {
 // 많이 구매한 상품 순위 조회
 app.get('/sellrank', async (req, res) => {
   try {
-    const { data } = await axios.get('https://search.shopping.naver.com/best/category/purchase?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&period=P1D', { headers: Headers1 });
-    const $ = cheerio.load(data);
-    const scrapedData = [];
+    let { data } = await axios.get('https://search.shopping.naver.com/best/category/purchase?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&period=P1D', { headers: Headers1 });
+    let $ = cheerio.load(data);
+    let scrapedData = [];
 
     $('.imageProduct_item__KZB_F').each((index, element) => {
-      const rank = $(element).find('.imageProduct_rank__lEppJ').text();
+      let rank = $(element).find('.imageProduct_rank__lEppJ').text();
       // 이미지 URL 추출 부분
-      const imageElement = $(element).find('img');
-      const imageUrl = imageElement.attr('src');
+      let imageElement = $(element).find('img');
+      let imageUrl = imageElement.attr('src');
       
       // 상품명, 가격 등 나머지 정보 추출 부분
-      const title = $(element).find('.imageProduct_title__Wdeb1').text();
-      const price = $(element).find('.imageProduct_price__W6pU1').text();
-      const deliveryFee = $(element).find('.imageProduct_delivery_fee__a2zzJ').text();
-      const benefit = $(element).find('.imageProduct_benefit__y9I4_').text();
-      const storeName = $(element).find('.imageProduct_mall__tJkQR').text();
-      const linkElement = $(element).find('.imageProduct_link_item__1NP7w');
-      const link = linkElement.attr('href');
-      const nvMid = linkElement.data('i');
-      const parsedUrl = new URL(link, 'https://search.shopping.naver.com');
-      const catId = parsedUrl.searchParams.get('catId');
+      let title = $(element).find('.imageProduct_title__Wdeb1').text();
+      let price = $(element).find('.imageProduct_price__W6pU1').text();
+      let deliveryFee = $(element).find('.imageProduct_delivery_fee__a2zzJ').text();
+      let benefit = $(element).find('.imageProduct_benefit__y9I4_').text();
+      let storeName = $(element).find('.imageProduct_mall__tJkQR').text();
+      let linkElement = $(element).find('.imageProduct_link_item__1NP7w');
+      let link = linkElement.attr('href');
+      let nvMid = linkElement.data('i');
+      let parsedUrl = new URL(link, 'https://search.shopping.naver.com');
+      let catId = parsedUrl.searchParams.get('catId');
 
       // 가격비교 정보 추출 부분
-      const compareLink = $(element).find('.imageProduct_btn_store__bL4eB').attr('href');
-      const compareNumber = $(element).find('.imageProduct_btn_store__bL4eB em').text();
+      let compareLink = $(element).find('.imageProduct_btn_store__bL4eB').attr('href');
+      let compareNumber = $(element).find('.imageProduct_btn_store__bL4eB em').text();
 
       // 추출한 정보를 객체에 저장
       scrapedData.push({
@@ -244,5 +240,5 @@ app.get('/sellrank', async (req, res) => {
   }
 });
 
-const port = 3000;
+let port = 3000;
 app.listen(port, () => console.log(`서버 PORT: ${port}`));
