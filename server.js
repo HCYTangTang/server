@@ -38,13 +38,11 @@ async function fetchDynamicContent(url) {
   return content;
 }
 
-
 // 네이버 쇼핑 상품 페이지에서 mallPid 추출
 app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`, { headers: Headers1 });
-    const html = await fetchDynamicContent(url);
     const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(data);
     res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
