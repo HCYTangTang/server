@@ -4,6 +4,7 @@ const cors = require('cors');
 const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
+const puppeteer = require('puppeteer');
 
 app.use(cors({ origin: '*' }));
 
@@ -30,11 +31,22 @@ const Headers2 = {
   'Referrer': 'https://smartstore.naver.com/',
 };
 
+async function fetchDynamicContent(url) {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.goto(url, { waitUntil: 'networkidle0' });
+  const content = await page.content();
+  await browser.close();
+  return content;
+}
+
+
 // 네이버 쇼핑 상품 페이지에서 mallPid 추출
 app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`, { headers: Headers1 });
+    const html = await fetchDynamicContent(url);
     const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(data);
     res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
@@ -78,6 +90,7 @@ app.get('/product2/:productid', async (req, res) => {
       headers: Headers2,
       maxRedirects: 5 // 리디렉션 최대 횟수 설정
     });
+    const html = await fetchDynamicContent(url);
 
     // HTML에서 nvMid 추출
     const nvMid = extractMid(response.data);
