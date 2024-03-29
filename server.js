@@ -5,14 +5,12 @@ const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
 const puppeteer = require('puppeteer');
-const browser = await puppeteer.launch({
-  executablePath: process.env.PUPPETEER_EXECUTABLE_PATH
-});
 
 app.use(cors({ origin: '*' }));
 
 const Headers1 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Sec-Ch-Ua': "Chromium";v="122", "Not A:Brand";v="24", "Google Chrome";v="122",
   'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
   'Sec-Fetch-Dest': 'document',
   'Sec-Fetch-Mode': 'navigate',
@@ -23,6 +21,7 @@ const Headers1 = {
 };
 const Headers2 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+  'Sec-Ch-Ua': "Chromium";v="122", "Not A:Brand";v="24", "Google Chrome";v="122",
   'Accept-Language': 'ko-KR,ko;q=0.9',
   'Sec-Fetch-Dest': 'document',
   'Sec-Fetch-Mode': 'navigate',
@@ -32,6 +31,14 @@ const Headers2 = {
   'Referrer': 'https://smartstore.naver.com/',
 };
 
+async function fetchDynamicContent(url) {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.goto(url, { waitUntil: 'networkidle0' });
+  const content = await page.content();
+  await browser.close();
+  return content;
+}
 
 
 // 네이버 쇼핑 상품 페이지에서 mallPid 추출
@@ -39,6 +46,7 @@ app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
     const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`, { headers: Headers1 });
+    const html = await fetchDynamicContent(url);
     const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(data);
     res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
@@ -77,10 +85,15 @@ function extractData(html) {
 app.get('/product2/:productid', async (req, res) => {
   const { productid } = req.params;
   try {
-    // const url = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, { headers: Headers2 });
-    const url = `https://smartstore.naver.com/main/products/${productid}`;
+    // Axios 요청
+    const response = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, {
+      headers: Headers2,
+      maxRedirects: 5 // 리디렉션 최대 횟수 설정
+    });
     const html = await fetchDynamicContent(url);
-    const nvMid = extractMid(html);
+
+    // HTML에서 nvMid 추출
+    const nvMid = extractMid(response.data);
 
     // 응답
     res.json({ nvMid });
@@ -99,7 +112,7 @@ function extractMid(html) {
   if (match && match[1]) {
     nvMid = match[1];
   }
-  return nvMid;
+  return nvMid; // 객체 형태가 아닌 단일 값으로 반환
 }
 
 // 상품 지수에 대한 데이터 JSON 추출
