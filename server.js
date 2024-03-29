@@ -1,7 +1,8 @@
 const axios = require('axios');
+const puppeteer = require('puppeteer');
 const express = require('express');
-const cors = require('cors');
 const cheerio = require('cheerio');
+const cors = require('cors');
 const app = express();
 const url = require('url');
 
@@ -21,6 +22,16 @@ const Headers2 = {
   'Upgrade-Insecure-Requests': '1',
   'Referrer': 'https://smartstore.naver.com/',
 };
+
+// Puppeteer를 이용해 동적 컨텐츠를 가져오는 함수
+async function fetchDynamicContent(url) {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.goto(url, { waitUntil: 'networkidle0' });
+  const content = await page.content();
+  await browser.close();
+  return content;
+}
 
 function extractData(html) {
   const $ = cheerio.load(html);
@@ -64,9 +75,10 @@ function extractMid(html) {
 app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`, { headers: Headers1 });
-    const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(data);
-    res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
+    const url = `https://search.shopping.naver.com/product/${req.params.id}`;
+    const content = await fetchDynamicContent(url);
+    const extractedData = extractData(content);
+    res.json(extractedData);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });
@@ -77,16 +89,9 @@ app.get('/product/:id', async (req, res) => {
 app.get('/product2/:productid', async (req, res) => {
   const { productid } = req.params;
   try {
-    // Axios 요청
-    const response = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, {
-      headers: Headers2,
-      maxRedirects: 5 // 리디렉션 최대 횟수 설정
-    });
-
-    // HTML에서 nvMid 추출
-    const nvMid = extractMid(response.data);
-
-    // 응답
+    const url = `https://smartstore.naver.com/main/products/${req.params.productid}`;
+    const content = await fetchDynamicContent(url);
+    const nvMid = extractMid(content);
     res.json({ nvMid });
   } catch (error) {
     console.error(error);
