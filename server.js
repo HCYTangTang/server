@@ -8,6 +8,7 @@ const url = require('url');
 
 app.use(cors({ origin: '*' }));
 
+
 const Headers1 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
   'Referrer': 'https://search.shopping.naver.com/'
@@ -22,6 +23,11 @@ const Headers2 = {
   'Upgrade-Insecure-Requests': '1',
   'Referrer': 'https://smartstore.naver.com/',
 };
+
+const browser = await puppeteer.launch({
+  headless: true,
+  args: ['--no-sandbox', '--disable-setuid-sandbox']
+});
 
 // Puppeteer를 이용해 동적 컨텐츠를 가져오는 함수
 async function fetchDynamicContent(url) {
