@@ -8,6 +8,28 @@ const url = require('url');
 
 app.use(cors({ origin: '*' }));
 
+let globalBrowser;
+
+async function initializeBrowser() {
+  if (!globalBrowser) {
+    globalBrowser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+  }
+}
+
+// Puppeteer를 이용해 동적 컨텐츠를 가져오는 함수
+async function fetchDynamicContent(url) {
+  if (!globalBrowser) {
+    await initializeBrowser();
+  }
+  const page = await globalBrowser.newPage();
+  await page.goto(url, { waitUntil: 'networkidle0' });
+  const content = await page.content();
+  await page.close();
+  return content;
+}
 
 const Headers1 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -23,22 +45,6 @@ const Headers2 = {
   'Upgrade-Insecure-Requests': '1',
   'Referrer': 'https://smartstore.naver.com/',
 };
-
-const browser = await puppeteer.launch({
-  headless: true,
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
-});
-
-// Puppeteer를 이용해 동적 컨텐츠를 가져오는 함수
-async function fetchDynamicContent(url) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.goto(url, { waitUntil: 'networkidle0' });
-  const content = await page.content();
-  await browser.close();
-  return content;
-}
-
 function extractData(html) {
   const $ = cheerio.load(html);
   const scriptTag = $('#__NEXT_DATA__');
@@ -231,6 +237,12 @@ app.get('/sellrank', async (req, res) => {
     // 에러 처리
     console.error(error);
     res.status(500).send('Error occurred while scraping data');
+  }
+});
+
+process.on('exit', () => {
+  if (globalBrowser) {
+    globalBrowser.close();
   }
 });
 
