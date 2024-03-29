@@ -13,8 +13,9 @@ let globalBrowser;
 async function initializeBrowser() {
   if (!globalBrowser) {
     globalBrowser = await puppeteer.launch({
-      headless: "new",
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      headless: true,
+      executablePath: `/usr/bin/google-chrome`,
+      args: [`--no-sandbox`, `--disable-gpu`, `--disable-dev-shm-usage`]
     });
   }
 }
