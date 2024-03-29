@@ -16,7 +16,7 @@
     "font-awesome": "^4.7.0",
     "vue": "^3.2.13",
     "vue-router": "^4.1.6",
-    "puppeteer-core": "^21.5.2"
+    "puppeteer": "^21.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.12.16",
