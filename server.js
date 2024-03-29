@@ -4,7 +4,6 @@ const cors = require('cors');
 const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
-const puppeteer = require('puppeteer');
 
 app.use(cors({ origin: '*' }));
 
@@ -27,12 +26,14 @@ function extractData(html) {
   const $ = cheerio.load(html);
   const scriptTag = $('#__NEXT_DATA__');
   const jsonData = JSON.parse(scriptTag.html());
+
   let SV1 = null;
   let SV2 = null;
   let SV3 = null;
   let SV4 = null;
   let SV5 = null;
   let SV6 = null;
+
   if (jsonData && jsonData.props && jsonData.props.pageProps && jsonData.props.pageProps.product) {
     const productData = jsonData.props.pageProps.product;
     SV1 = productData.mallPid;
@@ -50,29 +51,21 @@ function extractData(html) {
 function extractMid(html) {
   const $ = cheerio.load(html);
   const scriptContent = $('body > script:nth-child(2)').html();
+
   let nvMid = null;
   const match = scriptContent.match(/"syncNvMid"\s*:\s*(\d+)/);
   if (match && match[1]) {
     nvMid = match[1];
   }
-  return { nvMid };
-}
-
-async function fetchPageContent(url) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.goto(url, { waitUntil: 'networkidle2' });
-  const content = await page.content();
-  await browser.close();
-  return content;
+  return nvMid; // 객체 형태가 아닌 단일 값으로 반환
 }
 
 // 네이버 쇼핑 상품 페이지에서 mallPid 추출
 app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const html = await fetchPageContent(`https://search.shopping.naver.com/product/${id}`);
-    const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(html);
+    const { data } = await axios.get(`https://search.shopping.naver.com/product/${id}`, { headers: Headers1 });
+    const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(data);
     res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
     console.error(error);
@@ -84,8 +77,16 @@ app.get('/product/:id', async (req, res) => {
 app.get('/product2/:productid', async (req, res) => {
   const { productid } = req.params;
   try {
-    const html = await fetchPageContent(`https://smartstore.naver.com/main/products/${productid}`);
-    const { nvMid } = extractMid(html);
+    // Axios 요청
+    const response = await axios.get(`https://smartstore.naver.com/main/products/${productid}`, {
+      headers: Headers2,
+      maxRedirects: 5 // 리디렉션 최대 횟수 설정
+    });
+
+    // HTML에서 nvMid 추출
+    const nvMid = extractMid(response.data);
+
+    // 응답
     res.json({ nvMid });
   } catch (error) {
     console.error(error);
@@ -105,6 +106,7 @@ app.post('/api/search', express.json(), async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+
 // 쇼핑 인기도키워드 순위 조회
 app.get('/rankup', async (req, res) => {
   try {
@@ -114,10 +116,12 @@ app.get('/rankup', async (req, res) => {
     const { data } = await axios.get(url, { headers: Headers1 });
     const $ = cheerio.load(data);
     const scrapedData = [];
+
     $('.chartList_item_keyword__m_koH').each((index, element) => {
       const rank = $(element).find('.chartList_rank__ZTvTo').text();
       const status = $(element).find('.chartList_status__YiyMu').text();
       let keyword = $(element).text().replace(rank, '').replace(status, '').trim();
+
       // "상품" 뒤에 오는 모든 문자열 제거
       const productStringIndex = keyword.indexOf('상품');
       if (productStringIndex !== -1) {
@@ -126,11 +130,13 @@ app.get('/rankup', async (req, res) => {
       
       scrapedData.push({ rank, status, keyword });
     });
+
     res.json(scrapedData);
   } catch (error) {
     res.status(500).send('Error occurred while scraping data');
   }
 });
+
 // 인기 브랜드 순위 조회
 app.get('/brandrank', async (req, res) => {
   try {
@@ -141,10 +147,12 @@ app.get('/brandrank', async (req, res) => {
     const { data } = await axios.get(url, { headers: Headers1 });
     const $ = cheerio.load(data);
     const scrapedData = [];
+
     $('.chartList_item_keyword__m_koH').each((index, element) => {
       const rank = $(element).find('.chartList_rank__ZTvTo').text();
       const status = $(element).find('.chartList_status__YiyMu').text();
       let keyword = $(element).text().replace(rank, '').replace(status, '').trim();
+
       // "상품" 뒤에 오는 모든 문자열 제거
       const productStringIndex = keyword.indexOf('상품');
       if (productStringIndex !== -1) {
@@ -153,17 +161,20 @@ app.get('/brandrank', async (req, res) => {
       
       scrapedData.push({ rank, status, keyword });
     });
+
     res.json(scrapedData);
   } catch (error) {
     res.status(500).send('Error occurred while scraping data');
   }
 });
+
 // 많이 구매한 상품 순위 조회
 app.get('/sellrank', async (req, res) => {
   try {
     const { data } = await axios.get('https://search.shopping.naver.com/best/category/purchase?categoryCategoryId=ALL&categoryChildCategoryId=&categoryDemo=A00&categoryMidCategoryId=&categoryRootCategoryId=ALL&period=P1D', { headers: Headers1 });
     const $ = cheerio.load(data);
     const scrapedData = [];
+
     $('.imageProduct_item__KZB_F').each((index, element) => {
       const rank = $(element).find('.imageProduct_rank__lEppJ').text();
       // 이미지 URL 추출 부분
@@ -181,9 +192,11 @@ app.get('/sellrank', async (req, res) => {
       const nvMid = linkElement.data('i');
       const parsedUrl = new URL(link, 'https://search.shopping.naver.com');
       const catId = parsedUrl.searchParams.get('catId');
+
       // 가격비교 정보 추출 부분
       const compareLink = $(element).find('.imageProduct_btn_store__bL4eB').attr('href');
       const compareNumber = $(element).find('.imageProduct_btn_store__bL4eB em').text();
+
       // 추출한 정보를 객체에 저장
       scrapedData.push({
         rank,
@@ -200,6 +213,7 @@ app.get('/sellrank', async (req, res) => {
         compareNumber: compareNumber ? compareNumber.replace(/[^\d]/g, '') : null // 숫자만 추출
       });
     });
+
     // JSON 형태로 클라이언트에게 데이터 응답
     res.json(scrapedData);
   } catch (error) {
@@ -208,5 +222,6 @@ app.get('/sellrank', async (req, res) => {
     res.status(500).send('Error occurred while scraping data');
   }
 });
+
 const port = 3000;
 app.listen(port, () => console.log(`서버 PORT: ${port}`));
