@@ -4,16 +4,15 @@ const cors = require('cors');
 const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
 
 app.use(cors({ origin: '*' }));
 
-async function launchBrowser() {
-  return await puppeteer.launch({
-    args: ['--no-sandbox', '--disable-setuid-sandbox'],
-    headless: true
-  });
-}
+const browser = await puppeteer.launch({
+  executablePath: process.env.CHROME_PATH, // 환경 변수에서 Chrome 경로를 가져옴
+  args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  headless: true
+});
 
 const Headers1 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
