@@ -14,7 +14,7 @@ async function initializeBrowser() {
   if (!globalBrowser) {
     globalBrowser = await puppeteer.launch({
       headless: true,
-      executablePath: `/usr/bin/google-chrome`,
+      executablePath: `/opt/google/chrome/chrome`,
       args: [`--no-sandbox`, `--disable-gpu`, `--disable-dev-shm-usage`]
     });
   }
