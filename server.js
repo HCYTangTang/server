@@ -8,6 +8,13 @@ const puppeteer = require('puppeteer');
 
 app.use(cors({ origin: '*' }));
 
+async function launchBrowser() {
+  return await puppeteer.launch({
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+    headless: true
+  });
+}
+
 const Headers1 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
   'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7',
@@ -33,10 +40,10 @@ const Headers2 = {
 app.get('/product/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const browser = await puppeteer.launch();
+    const browser = await launchBrowser();
     const page = await browser.newPage();
     await page.goto(`https://search.shopping.naver.com/product/${id}`, { waitUntil: 'networkidle2' });
-    
+
     const content = await page.content();
     
     const { SV1, SV2, SV3, SV4, SV5, SV6 } = extractData(content);
@@ -45,7 +52,7 @@ app.get('/product/:id', async (req, res) => {
     res.json({ SV1, SV2, SV3, SV4, SV5, SV6 });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: 'Error fetching product data.' });
   }
 });
 function extractData(html) {
@@ -76,7 +83,7 @@ function extractData(html) {
 app.get('/product2/:productid', async (req, res) => {
   const { productid } = req.params;
   try {
-    const browser = await puppeteer.launch();
+    const browser = await launchBrowser();
     const page = await browser.newPage();
     await page.goto(`https://smartstore.naver.com/main/products/${productid}`, { waitUntil: 'networkidle2' });
     
