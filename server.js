@@ -5,16 +5,8 @@ const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
 const puppeteer = require('puppeteer');
-app.use(cors({ origin: '*' }));
 
-async function fetchPageContent(url) {
-  const browser = await puppeteer.launch();
-  const page = await browser.newPage();
-  await page.goto(url, { waitUntil: 'networkidle2' });
-  const content = await page.content();
-  await browser.close();
-  return content;
-}
+app.use(cors({ origin: '*' }));
 
 const Headers1 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
@@ -64,6 +56,15 @@ function extractMid(html) {
     nvMid = match[1];
   }
   return { nvMid };
+}
+
+async function fetchPageContent(url) {
+  const browser = await puppeteer.launch();
+  const page = await browser.newPage();
+  await page.goto(url, { waitUntil: 'networkidle2' });
+  const content = await page.content();
+  await browser.close();
+  return content;
 }
 
 // 네이버 쇼핑 상품 페이지에서 mallPid 추출
