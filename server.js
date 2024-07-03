@@ -87,7 +87,7 @@ function extractMid(html) {
 app.post('/api/search', express.json(), async (req, res) => {
   const { keyword } = req.body;
   try {
-    const localServerResponse = await axios.get(`http://218.38.65.91:3000/score?keyword=${encodeURIComponent(keyword)}`);
+    const localServerResponse = await axios.get(`http://localhost:3000/score?keyword=${encodeURIComponent(keyword)}`);
     const data = localServerResponse.data;
     res.json(data);
   } catch (error) {
