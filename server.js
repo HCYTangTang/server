@@ -92,6 +92,8 @@ function extractMid(html) {
 app.post('/api/inflow', async (req, res) => {
   try {
     let { mallSeq } = req.body;
+    // mallSeq 값을 콘솔로 출력하여 확인
+    console.log('Received mallSeq:', mallSeq);
     let url = "https://hcenter.shopping.naver.com/brand/content";
 
     let headers = {
@@ -125,7 +127,7 @@ app.post('/api/inflow', async (req, res) => {
               "dateType": "Daily",
               "startDate": "2024-09-11",
               "endDate": "2024-09-11",
-              "mallSequence": mallSeq,
+              "mallSequence": String(mallSeq),
               "pageable": {
                   "page": 1,
                   "size": 50
