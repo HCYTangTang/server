@@ -112,6 +112,17 @@ app.post('/api/inflow', async (req, res) => {
     "query": `
       query getProductSale($queryRequest: StoreTrafficRequest) {
         productSales(queryRequest: $queryRequest) {
+          product {
+            identifier
+            name
+            category {
+              identifier
+              name
+              fullName
+              __typename
+            }
+            __typename
+          }
           sales {
             paymentAmount
             paymentCount
@@ -122,6 +133,14 @@ app.post('/api/inflow', async (req, res) => {
             click
             __typename
           }
+          rest {
+            comparePreWeek {
+              isNewlyAdded
+              __typename
+            }
+            __typename
+          }
+          __typename
         }
       }
     `,
