@@ -4,6 +4,8 @@ const cors = require('cors');
 const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
+const { Builder, By } = require('selenium-webdriver');
+require('chromedriver');
 
 // JSON 파싱사용
 app.use(express.json());
@@ -257,6 +259,40 @@ app.get('/sellrank', async (req, res) => {
     console.error(error);
     res.status(500).send('Error occurred while scraping data');
   }
+});
+
+// mallSeq 추출
+app.get('/get-mall-seq', async (req, res) => {
+    // 브라우저 설정
+    let driver = await new Builder().forBrowser('chrome').setChromeOptions().build();
+
+    try {
+        // 다이렉트로 URL 접속
+        const url = 'https://smartstore.naver.com/main/products/5250558586';
+        await driver.get(url);
+
+        // F5 새로고침
+        await driver.navigate().refresh();
+
+        // Selenium에서 JavaScript 실행 (window.__PRELOADED_STATE__ 객체에서 mallSeq 값 추출)
+        const mallSeq = await driver.executeScript(
+            'return window.__PRELOADED_STATE__.smartStoreV2.channel.mallSeq;'
+        );
+
+        if (mallSeq) {
+            console.log(`mallSeq: ${mallSeq}`);
+            res.json({ mallSeq });
+        } else {
+            console.log('mallSeq 값을 찾을 수 없습니다.');
+            res.status(404).json({ error: 'mallSeq 값을 찾을 수 없습니다.' });
+        }
+    } catch (e) {
+        console.error('스크립트를 실행할 수 없습니다:', e);
+        res.status(500).json({ error: '스크립트를 실행할 수 없습니다.' });
+    } finally {
+        // 브라우저 종료
+        await driver.quit();
+    }
 });
 const port = 3000;
 app.listen(port, () => console.log(`서버 PORT: ${port}`));
