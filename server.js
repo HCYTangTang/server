@@ -4,7 +4,12 @@ const cors = require('cors');
 const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
+
+// JSON 파싱사용
+app.use(express.json());
+// CORS 모든권한 부여여
 app.use(cors({ origin: '*' }));
+
 const Headers1 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
   'Referrer': 'https://search.shopping.naver.com/'
@@ -82,6 +87,61 @@ function extractMid(html) {
   }
   return { nvMid };
 }
+
+// 유입체크
+app.post('/api/inflow', async (req, res) => {
+  try {
+    let { mallSeq } = req.body;
+    let url = "https://hcenter.shopping.naver.com/brand/content";
+
+    let headers = {
+      'Content-Type': 'text/plain;charset=UTF-8',
+      'User-Agent': 'Mozilla/5.0',
+      'Accept-Encoding': 'gzip, deflate, br, zstd',
+      'Accept': '*/*',
+      'Origin': 'https://hcenter.shopping.naver.com',
+    };
+
+  let payload = {
+      "operationName": "getProductSale",
+      "query": `
+          query getProductSale($queryRequest: StoreTrafficRequest) {
+              productSales(queryRequest: $queryRequest) {
+                  sales {
+                      paymentAmount
+                      paymentCount
+                      purchaseConversionRate
+                      __typename
+                  }
+                  visit {
+                      click
+                      __typename
+                  }
+              }
+          }
+      `,
+      "variables": {
+          "queryRequest": {
+              "dateType": "Daily",
+              "startDate": "2024-09-11",
+              "endDate": "2024-09-11",
+              "mallSequence": mallSeq,
+              "pageable": {
+                  "page": 1,
+                  "size": 50
+              },
+              "sortBy": "PaymentAmount"
+          }
+      }
+  };
+    // API 요청
+    let response = await axios.post(url, payload, { headers });
+    res.json(response.data);
+  } catch (error) {
+    console.error('요청 실패:', error);
+    res.status(500).json({ message: 'API 요청 중 오류발생' });
+  }
+});
 
 // 상품 지수에 대한 데이터 JSON 추출
 app.post('/api/search', express.json(), async (req, res) => {
