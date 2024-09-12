@@ -90,58 +90,65 @@ function extractMid(html) {
 
 // 유입체크
 app.post('/api/inflow', async (req, res) => {
-  try {
-    let { mallSeq } = req.body;
-    // mallSeq 값을 콘솔로 출력하여 확인
-    console.log('Received mallSeq:', mallSeq);
-    let url = "https://hcenter.shopping.naver.com/brand/content";
+  const { mallSeq } = req.body; // 클라이언트로부터 mallSeq 값을 받음
 
-    let headers = {
-      'Content-Type': 'text/plain;charset=UTF-8',
-      'User-Agent': 'Mozilla/5.0',
-      'Accept-Encoding': 'gzip, deflate, br, zstd',
-      'Accept': '*/*',
-      'Origin': 'https://hcenter.shopping.naver.com',
-    };
+  if (!mallSeq) {
+    return res.status(400).json({ error: 'mallSeq 값이 필요합니다.' });
+  }
 
-  let payload = {
-      "operationName": "getProductSale",
-      "query": `
-          query getProductSale($queryRequest: StoreTrafficRequest) {
-              productSales(queryRequest: $queryRequest) {
-                  sales {
-                      paymentAmount
-                      paymentCount
-                      purchaseConversionRate
-                      __typename
-                  }
-                  visit {
-                      click
-                      __typename
-                  }
-              }
-          }
-      `,
-      "variables": {
-          "queryRequest": {
-              "dateType": "Daily",
-              "startDate": "2024-09-11",
-              "endDate": "2024-09-11",
-              "mallSequence": String(mallSeq),
-              "pageable": {
-                  "page": 1,
-                  "size": 50
-              },
-              "sortBy": "PaymentAmount"
-          }
-      }
+  // API에 요청을 보낼 URL 및 설정
+  const url = 'https://hcenter.shopping.naver.com/brand/content';
+  const headers = {
+    'Content-Type': 'text/plain;charset=UTF-8',
+    'User-Agent': 'Mozilla/5.0',
+    'Accept-Encoding': 'gzip, deflate, br, zstd',
+    'Accept': '*/*',
+    'Origin': 'https://hcenter.shopping.naver.com',
+    'Cookie': 'SHP_BUCKET_ID=5; _fwb=122gii815hAIC6ZLdev0ZBI.1713281309259; NNB=QGXMROGOJ6ZGM; NAC=9lWdBQgZ2sia; ASID=7985052d00000191465bdd2a00000062; _ga=GA1.2.485014193.1723481261; NaverSuggestUse=use%26unuse; nid_inf=339041794; NID_AUT=0XcgKyoMCyvd5TEyG2KglYj4OCQaVnhTBsl3EyQjtWIX6Bjyi0wqQtYC6LNUgjl6; NID_JKL=MFOG4HKwpt3mr5b0YJoLiFuC8VKyK6nG4DaV8pJp13g=; CBI_SES=B0Wc8vXoyO2oiIwR65SOMq6NamWiYSnOoNHbAFy7ntAD1EWMCPKzg2Gzkx6+GFBcrtvFglXDuf0g3fcOGvBHnUj/OZzVim77Ke8AGc2JB6DrO2cEwG7RUrkSUwbdFc/E4+aQOMnflvzc45qu63lU30j/kvZLd5Bj5GUelWjZnl7JUwwcLC7Dwjmr6/60mMurSYcRPz+LR2/Hyc1yvyrYfk4Q3isMwmqeHJEm3EgAsXO6EQ5mAmcz5w7U1U3lQgsZ/qPkdnO8l6Y2sgpJ/fXA2PSLE50ZuXQGoLFjBqKe3HpGI6WySqaqVGG5ZDShXcmw3hZ37iu1GyyEfOun6wCqVnkY4GFUtOomBNOy2q8a/feiF3Sc8huhAiZtbnV/Qhis+xa3mPKnDhwmnJtMlSyuqF0jYWHF6aht74nUAmj4a+4WccVuQUTHLzhu+wFLHOkr; NACT=1; koa:sess=06597a8b-5a7a-4681-af3a-1e99d55957a0; koa:sess.sig=NNFpACW0_lLl8rEbttq3EAHH1T8; CBI_CHK="r5V0mf9uRUZHZ/vmLGy3ez7f4/k4aqWXL5o03eN68frmW9Gdegkcm9sKy0J9lOlvBw6q/CgmPKgjo5ZSp45r0NceGNEByRvxh+JAhq5QJMgdGVApvfwOgw1iU9BsoS3Rqp3Fl6H36hGJjnSP5Ea53oFD3+47NQkBBbVI8Mf2wGg="; BUC=A-pxkYrtXO1YtIzP1dFCR9zi1hcwwD8s6_xKMGPzAC8=; NID_SES=AAABiBL/XEVMS+5oHahyCmDjYvjZsoxGiAz11TPcgTEa8QYmYST2mt8vlQa0R8f/OCAYWvttDNou0i18aRrfzjrwg6JrNteAd5YlUcJVdAUKpxZJB9UI+b1/a9IYY6+Aob+jF42T/HOit9DAW2NgVtpaF31X0E2ujxGYAp8f3VnE2oUsFj3jI4Twz8DkhstRG+NBPzgCO2SsbPT7OEQAuxVqjD0iotjrVYJOzdolDFqLO07nGM7OORFNWZTt6LWPbZO7z5xy5yxpqV3TJRHBZckdsgmAIlMhReI+4hn2riARakipfoZFcmK5qgtsi04HMHqLx5zwqmnBetFX55jeMdKNX5KuzkmtdAZ2hVxLpOlyOvwOQcHsy595hEFzZDxX+xOVPaREiq83Plmj1yjmcxrVhEKBo6UrArFO1Kp4yXKHcMOui3p79uTDFlM59dBoJFD7Dy546TGVJnWryo/iVBQgMzBfDF21JlFazDB4diEp9Uw4kqEbwIgowkiy1QxXRwg/HcYyTEWNnxefMFCusISh74o=' // 실제 쿠키 값을 사용
   };
-    // API 요청
-    let response = await axios.post(url, payload, { headers });
+
+  const payload = {
+    "operationName": "getProductSale",
+    "query": `
+      query getProductSale($queryRequest: StoreTrafficRequest) {
+        productSales(queryRequest: $queryRequest) {
+          sales {
+            paymentAmount
+            paymentCount
+            purchaseConversionRate
+            __typename
+          }
+          visit {
+            click
+            __typename
+          }
+        }
+      }
+    `,
+    "variables": {
+      "queryRequest": {
+        "dateType": "Daily",
+        "startDate": "2024-09-11",
+        "endDate": "2024-09-11",
+        "mallSequence": mallSeq,  // 클라이언트에서 받은 mallSeq 값 사용
+        "pageable": {
+          "page": 1,
+          "size": 50
+        },
+        "sortBy": "PaymentAmount"
+      }
+    }
+  };
+
+  try {
+    // API로 요청 전송
+    const response = await axios.post(url, payload, { headers });
+
+    // 성공적으로 응답 받았을 때, 클라이언트에 해당 데이터 전송
     res.json(response.data);
   } catch (error) {
-    console.error('요청 실패:', error);
-    res.status(500).json({ message: 'API 요청 중 오류발생' });
+    console.error('Naver API 요청 실패:', error.response ? error.response.data : error.message);
+    res.status(500).json({ error: 'Naver API 요청 중 오류가 발생했습니다.' });
   }
 });
 
@@ -183,6 +190,7 @@ app.get('/rankup', async (req, res) => {
     res.status(500).send('Error occurred while scraping data');
   }
 });
+
 // 인기 브랜드 순위 조회
 app.get('/brandrank', async (req, res) => {
   try {
@@ -210,6 +218,7 @@ app.get('/brandrank', async (req, res) => {
     res.status(500).send('Error occurred while scraping data');
   }
 });
+
 // 많이 구매한 상품 순위 조회
 app.get('/sellrank', async (req, res) => {
   try {
@@ -259,44 +268,6 @@ app.get('/sellrank', async (req, res) => {
     console.error(error);
     res.status(500).send('Error occurred while scraping data');
   }
-});
-
-// mallSeq 추출
-app.get('/get-mall-seq', async (req, res) => {
-    const productUrl = 'https://smartstore.naver.com/main/products/5250558586';
-
-    try {
-        // Axios를 사용하여 HTML 데이터를 가져옵니다.
-        const response = await axios.get(productUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
-            }
-        });
-
-        // Cheerio를 사용하여 HTML 파싱
-        const $ = cheerio.load(response.data);
-
-        // window.__PRELOADED_STATE__에서 mallSeq 추출
-        const scriptContent = $('script').filter((i, el) => $(el).html().includes('window.__PRELOADED_STATE__')).html();
-        const preloadedStateMatch = scriptContent.match(/window\.__PRELOADED_STATE__\s*=\s*(\{.*?\});/);
-
-        if (preloadedStateMatch) {
-            const preloadedState = JSON.parse(preloadedStateMatch[1]);
-            const mallSeq = preloadedState.smartStoreV2.channel.mallSeq;
-
-            if (mallSeq) {
-                console.log(`mallSeq: ${mallSeq}`);
-                res.json({ mallSeq });
-            } else {
-                res.status(404).json({ error: 'mallSeq 값을 찾을 수 없습니다.' });
-            }
-        } else {
-            res.status(404).json({ error: '__PRELOADED_STATE__ 데이터를 찾을 수 없습니다.' });
-        }
-    } catch (error) {
-        console.error('데이터 요청 실패:', error);
-        res.status(500).json({ error: '데이터 요청 중 오류가 발생했습니다.' });
-    }
 });
 
 const port = process.env.PORT || 3000;
