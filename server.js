@@ -4,8 +4,6 @@ const cors = require('cors');
 const cheerio = require('cheerio');
 const app = express();
 const url = require('url');
-const { Builder, By } = require('selenium-webdriver');
-require('chromedriver');
 
 // JSON 파싱사용
 app.use(express.json());
@@ -263,36 +261,41 @@ app.get('/sellrank', async (req, res) => {
 
 // mallSeq 추출
 app.get('/get-mall-seq', async (req, res) => {
-    // 브라우저 설정
-    let driver = await new Builder().forBrowser('chrome').setChromeOptions().build();
+    const productUrl = 'https://smartstore.naver.com/main/products/5250558586';
 
     try {
-        // 다이렉트로 URL 접속
-        const url = 'https://smartstore.naver.com/main/products/5250558586';
-        await driver.get(url);
+        // Axios를 사용하여 HTML 데이터를 가져옵니다.
+        const response = await axios.get(productUrl, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+            }
+        });
 
-        // F5 새로고침
-        await driver.navigate().refresh();
+        // Cheerio를 사용하여 HTML 파싱
+        const $ = cheerio.load(response.data);
 
-        // Selenium에서 JavaScript 실행 (window.__PRELOADED_STATE__ 객체에서 mallSeq 값 추출)
-        const mallSeq = await driver.executeScript(
-            'return window.__PRELOADED_STATE__.smartStoreV2.channel.mallSeq;'
-        );
+        // window.__PRELOADED_STATE__에서 mallSeq 추출
+        const scriptContent = $('script').filter((i, el) => $(el).html().includes('window.__PRELOADED_STATE__')).html();
+        const preloadedStateMatch = scriptContent.match(/window\.__PRELOADED_STATE__\s*=\s*(\{.*?\});/);
 
-        if (mallSeq) {
-            console.log(`mallSeq: ${mallSeq}`);
-            res.json({ mallSeq });
+        if (preloadedStateMatch) {
+            const preloadedState = JSON.parse(preloadedStateMatch[1]);
+            const mallSeq = preloadedState.smartStoreV2.channel.mallSeq;
+
+            if (mallSeq) {
+                console.log(`mallSeq: ${mallSeq}`);
+                res.json({ mallSeq });
+            } else {
+                res.status(404).json({ error: 'mallSeq 값을 찾을 수 없습니다.' });
+            }
         } else {
-            console.log('mallSeq 값을 찾을 수 없습니다.');
-            res.status(404).json({ error: 'mallSeq 값을 찾을 수 없습니다.' });
+            res.status(404).json({ error: '__PRELOADED_STATE__ 데이터를 찾을 수 없습니다.' });
         }
-    } catch (e) {
-        console.error('스크립트를 실행할 수 없습니다:', e);
-        res.status(500).json({ error: '스크립트를 실행할 수 없습니다.' });
-    } finally {
-        // 브라우저 종료
-        await driver.quit();
+    } catch (error) {
+        console.error('데이터 요청 실패:', error);
+        res.status(500).json({ error: '데이터 요청 중 오류가 발생했습니다.' });
     }
 });
-const port = 3000;
+
+const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`서버 PORT: ${port}`));
