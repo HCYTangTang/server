@@ -98,7 +98,7 @@ app.post('/api/proxy-inflow', async (req, res) => {
     const mallSeq = mallSeqResponse.data.mallSeq;
 
   if (!mallSeq) {
-    return res.status(400).json({ error: '확인불.' });
+    return res.status(400).json({ error: '확인불가.' });
   }
 
   // API에 요청을 보낼 URL 및 설정
@@ -163,16 +163,13 @@ app.post('/api/proxy-inflow', async (req, res) => {
       }
     }
   };
-
-  try {
     // API로 요청 전송
     const response = await axios.post(url, payload, { headers });
 
-    // 성공적으로 응답 받았을 때, 클라이언트에 해당 데이터 전송
-    res.json(response.data);
+    res.json(response.data);  // 클라이언트로 데이터 반환
   } catch (error) {
-    console.error('Naver API 요청 실패:', error.response ? error.response.data : error.message);
-    res.status(500).json({ error: 'Naver API 요청 중 오류가 발생했습니다.' });
+    console.error('API 요청 실패:', error);
+    res.status(500).json({ error: 'API 요청 중 오류가 발생했습니다.' });
   }
 });
 
