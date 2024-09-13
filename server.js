@@ -121,10 +121,7 @@ app.post('/api/proxy-inflow', async (req, res) => {
             identifier
             name
             category {
-              identifier
-              name
               fullName
-              __typename
             }
             __typename
           }
@@ -132,11 +129,9 @@ app.post('/api/proxy-inflow', async (req, res) => {
             paymentAmount
             paymentCount
             purchaseConversionRate
-            __typename
           }
           visit {
             click
-            __typename
           }
           rest {
             comparePreWeek {
@@ -164,19 +159,21 @@ app.post('/api/proxy-inflow', async (req, res) => {
     }
   };
     // API로 요청 전송
-    const response = await axios.post(url, payload, { headers });
+    const apiResponse = await axios.post(url, payload, { headers });
 
+    // 응답 데이터를 변환
     const transformedData = apiResponse.data.data.productSales.map(sale => ({
       productNum: sale.product.identifier,
-      Name: sale.product.name,
-      Category: sale.product.category.fullName,
+      name: sale.product.name,
+      category: sale.product.category.fullName,
       payAmount: sale.sales.paymentAmount,
       payCount: sale.sales.paymentCount,
-      conRate: sale.sales.purchaseConversionRate,
+      rate: sale.sales.purchaseConversionRate,
       visit: sale.visit.click
     }));
 
-    res.json(transformedData);  // 클라이언트로 데이터 반환
+    // 변환된 데이터 전송
+    res.json({ productSales: transformedData });
   } catch (error) {
     console.error('API 요청 실패:', error);
     res.status(500).json({ error: 'API 요청 중 오류가 발생했습니다.' });
