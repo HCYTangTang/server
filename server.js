@@ -7,7 +7,7 @@ const url = require('url');
 
 // JSON 파싱사용
 app.use(express.json());
-// CORS 모든권한 부여여
+// CORS 모든권한 부여
 app.use(cors({ origin: '*' }));
 
 const Headers1 = {
@@ -89,11 +89,16 @@ function extractMid(html) {
 }
 
 // 유입체크
-app.post('/api/inflow', async (req, res) => {
-  const { mallSeq } = req.body; // 클라이언트로부터 mallSeq 값을 받음
+app.post('/api/proxy-inflow', async (req, res) => {
+  const { storeUrl } = req.body;
+
+  try {
+    // mallSeq추출
+    const mallSeqResponse = await axios.post('http://1.233.29.162:3000/api/mallseq', { productUrl: storeUrl });
+    const mallSeq = mallSeqResponse.data.mallSeq;
 
   if (!mallSeq) {
-    return res.status(400).json({ error: 'mallSeq 값이 필요합니다.' });
+    return res.status(400).json({ error: '확인불.' });
   }
 
   // API에 요청을 보낼 URL 및 설정
