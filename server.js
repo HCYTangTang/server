@@ -147,8 +147,8 @@ app.post('/api/proxy-inflow', async (req, res) => {
     "variables": {
       "queryRequest": {
         "dateType": "Daily",
-        "startDate": "strdt",
-        "endDate": "endt",
+        "startDate": strdt,
+        "endDate": endt,
         "mallSequence": mallSeq,  // 클라이언트에서 받은 mallSeq 값 사용
         "pageable": {
           "page": 1,
