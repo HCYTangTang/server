@@ -90,7 +90,7 @@ function extractMid(html) {
 
 // 유입체크
 app.post('/api/proxy-inflow', async (req, res) => {
-  const { storeUrl } = req.body;
+  const { storeUrl, strdt, endt } = req.body;
 
   try {
     // mallSeq추출
@@ -147,8 +147,8 @@ app.post('/api/proxy-inflow', async (req, res) => {
     "variables": {
       "queryRequest": {
         "dateType": "Daily",
-        "startDate": "2024-09-11",
-        "endDate": "2024-09-11",
+        "startDate": "strdt",
+        "endDate": "endt",
         "mallSequence": mallSeq,  // 클라이언트에서 받은 mallSeq 값 사용
         "pageable": {
           "page": 1,
