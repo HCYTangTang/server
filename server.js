@@ -90,7 +90,7 @@ function extractMid(html) {
 
 // 유입체크
 app.post('/api/proxy-inflow', async (req, res) => {
-  const { storeUrl, strdt, endt, dateType } = req.body;
+  const { storeUrl, strdt, endt, dateType, cookie } = req.body;
 
   try {
     // mallSeq추출
@@ -109,7 +109,7 @@ app.post('/api/proxy-inflow', async (req, res) => {
     'Accept-Encoding': 'gzip, deflate, br, zstd',
     'Accept': '*/*',
     'Origin': 'https://hcenter.shopping.naver.com',
-    'Cookie': 'NNB=JXBYX654ZTRGM; NAC=XmqDBUwId6c6; nid_inf=338401955; NID_AUT=AchmzTItOpJOBvgFew6+pgt8LHY+dUjby6mNoRe/Qmzi7pYl2feYaLbB5Y87ERRE; NID_JKL=6RlQkJLDk3kDOCsliv6mfazy52muoHnzUaoS4SVzYSc=; NID_SES=AAABgUlXvo1mk2E/unY4B1F6CetJ8T5CcjGtP2SI8QCknv+KsIE5SlPea8mwluTUKjhsz686RIOuixngU7eg8toRe7JP968NBgYqKWlRW90CYGLh+m4XjUTiJI+wZ/MiEcCv31RAtfvjGOzr7B9Ctt7fo9aWLVyRZ+YygswMVQ8dLX4wgIAP9Tcy4hfMvSgYvpJIogI0Y+wzh6TL84HOKNblArdhYYcAh4MbCtlXl+v+Ck2MKm9+8YSJjI/AByEmxwLc/HvSkVEKvuxUdbz/8Z91yiENLdmV2Xhhnv3YtwG9nAmDU8YRzbndPB2RWS2Zkt6JRYn5f7AHazziWgCTzeuHSruNS2h8LdWzZjE9C1NmqhmUQfk4h+5NIKCtOpkOHg/fPjO6WNdYd6mjlDTeaooqpbd6ZSR3dR94vRsmTQlY1T7r5OlP2KDaXRsmT0woH6sbrlPwWiQXavDp8d3jsYhHBP56s9aj5axwcan+70XGNCBsOo7SK5qDnr6VZQWGuF1tT7ewdSxmfwtF0MghQuJFIck=; CBI_SES=2qzUdm8ffJPphT8JZderEC2Zl5dTvqoy+U1lX38mDSEIPsrZbIq5Cxu2qcpnBCn4wyf81JudD4P6gAvIjy363qEofTKZvSxYyzFpxklIsXs6Z6QjgUEKG3/ToyeXBIkIIztmx8fqOl2j/D7o4n5gdz3slSeSDtyw+gatJIq4KRhKlm8WsnZrpWbsdtcCPNcQLtZu67LFS0w+8fPZGYm6xkTjm3K5CUimBGCLEnYrRZgdWjqW7Unk2o/DUKcX9QQfXtvcVKKTdIk8sw0qRhbGZYNxFsBSzRL17JBwxg85Eoe+Ti8Hz3kLGjD5ekbMASVg0mG11KpdhG+CtPqhTFIo0Tzi5hX8pCNCCkNUAZtakNKnsYKIAeI2Vebib54Y/J0XEU0qQmVExQA+MLHCl3z3lRFsTne5LsWr49s+PgRVyghumtSfdQkxP8BPn0lOoMM1rqLk8uThEDko2dqhfLlogQ==; CBI_CHK="r5V0mf9uRUZHZ/vmLGy3ez7f4/k4aqWXL5o03eN68frmW9Gdegkcm9sKy0J9lOlvBw6q/CgmPKgjo5ZSp45r0NceGNEByRvxh+JAhq5QJMgdGVApvfwOgw1iU9BsoS3R/O7hxcW0trvJ0EYnVcH4Fm56Bxd3bLlpheKXVP8Jf5Q="; BUC=RzXo33HpuYxI0h8G413Gcml1ZnaBjAtK5S9_hW6czGk=; koa:sess=a8bfdb49-dd20-4e8f-810f-daeaca6b1e2e; koa:sess.sig=unieqOCskwHDt8-6p1UWiiHQaO0' // 실제 쿠키 값을 사용
+    'Cookie': cookie // 실제 쿠키 값을 사용
   };
 
   const payload = {
