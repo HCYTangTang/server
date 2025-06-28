@@ -10,6 +10,17 @@ app.use(express.json());
 // CORS 모든권한 부여
 app.use(cors({ origin: '*' }));
 
+app.use((req, res, next) => {
+  const allowedIp = '1.233.29.162';
+  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.connection.remoteAddress;
+
+  if (!ip.includes(allowedIp)) {
+    console.warn(`접근 차단된 IP: ${ip}`);
+    return res.status(403).json({ error: 'Cannot GET /api/search' });
+  }
+  next();
+});
+
 const Headers1 = {
   'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
   'Referrer': 'https://search.shopping.naver.com/'
