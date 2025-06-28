@@ -11,11 +11,10 @@ app.use(express.json());
 app.use(cors({ origin: '*' }));
 
 app.use((req, res, next) => {
-  const allowedIp = '1.233.29.162';
-  const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.connection.remoteAddress;
+  const host = req.headers.host;
 
-  if (!ip.includes(allowedIp)) {
-    console.warn(`접근 차단된 IP: ${ip}`);
+  if (!host || !host.includes('scoreplay.store')) {
+    console.warn(`접근 차단됨 - Host: ${host}`);
     return res.status(403).json({ error: 'Cannot GET /api/search' });
   }
   next();
